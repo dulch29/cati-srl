@@ -5,6 +5,14 @@ import {
   JournalAnalysis,
   LearnerConceptStatus,
 } from "./schemas/journal-analysis";
+import {
+  isSupabaseConfigured,
+  saveLocalConcept,
+  findLocalConceptByName,
+  saveLocalLearnerConcept,
+  getLocalLearnerConcept,
+  saveLocalConceptRelation,
+} from "@/lib/supabase/local-store";
 
 /**
  * Normalizes concept names for global deduplication:
@@ -130,54 +138,74 @@ async function findOrCreateConcept(
 ): Promise<{ id: string; name: string; normalized_name: string }> {
   const normalized = normalizeConceptName(name);
 
-  // 1. Look up existing concept
-  const { data: existing, error: selectError } = await supabase
-    .from("concepts")
-    .select("id, name, normalized_name")
-    .eq("normalized_name", normalized)
-    .maybeSingle();
-
-  if (selectError) {
-    console.error("[Knowledge Graph] Concept lookup error:", selectError);
+  // Check local store first or fallback
+  const localExisting = findLocalConceptByName(normalized);
+  if (localExisting && !isSupabaseConfigured()) {
+    return localExisting;
   }
 
-  if (existing) {
-    return existing;
-  }
+  if (isSupabaseConfigured()) {
+    try {
+      // 1. Look up existing concept in Supabase
+      const { data: existing } = await supabase
+        .from("concepts")
+        .select("id, name, normalized_name")
+        .eq("normalized_name", normalized)
+        .maybeSingle();
 
-  // 2. Insert if not found
-  const { data: created, error: insertError } = await supabase
-    .from("concepts")
-    .insert({
-      name: name.trim(),
-      normalized_name: normalized,
-      subject: subject.trim(),
-    })
-    .select("id, name, normalized_name")
-    .single();
+      if (existing) {
+        saveLocalConcept({
+          id: existing.id,
+          name: existing.name,
+          normalized_name: existing.normalized_name,
+          subject,
+          created_at: new Date().toISOString(),
+        });
+        return existing;
+      }
 
-  if (insertError) {
-    // If concurrent insert occurred, attempt one final lookup
-    const { data: fallback } = await supabase
-      .from("concepts")
-      .select("id, name, normalized_name")
-      .eq("normalized_name", normalized)
-      .maybeSingle();
+      // 2. Insert if not found
+      const { data: created, error: insertError } = await supabase
+        .from("concepts")
+        .insert({
+          name: name.trim(),
+          normalized_name: normalized,
+          subject: subject.trim(),
+        })
+        .select("id, name, normalized_name")
+        .single();
 
-    if (fallback) {
-      return fallback;
+      if (!insertError && created) {
+        saveLocalConcept({
+          id: created.id,
+          name: created.name,
+          normalized_name: created.normalized_name,
+          subject,
+          created_at: new Date().toISOString(),
+        });
+        return created;
+      }
+    } catch {
+      // proceed to local fallback
     }
-    throw new Error(
-      `Failed to create concept "${name}": ${insertError.message}`
-    );
   }
 
-  return created;
+  // Local fallback
+  const fallbackId = localExisting?.id || crypto.randomUUID();
+  const fallbackRecord = {
+    id: fallbackId,
+    name: name.trim(),
+    normalized_name: normalized,
+    subject: subject.trim(),
+    created_at: new Date().toISOString(),
+  };
+  saveLocalConcept(fallbackRecord);
+  return fallbackRecord;
 }
 
 /**
  * Updates the student's knowledge graph based on AI analysis:
- * 1. Creates/reuses concepts in public.concepts
+ * 1. Creates/reuses concepts in public.concepts & local store
  * 2. Creates/updates public.learner_concepts with calibrated mastery & review dates
  * 3. Incorporates detected misconceptions by lowering mastery & flagging weak concepts
  * 4. Links concept_relations between the main topic and constituent concepts
@@ -188,7 +216,6 @@ export async function updateLearnerKnowledgeGraph(
   analysis: JournalAnalysis,
   subject: string
 ): Promise<void> {
-  // Map of normalized concept names to created concept IDs
   const conceptIdMap = new Map<string, string>();
 
   // 1. Resolve or create the main topic concept
@@ -220,40 +247,84 @@ export async function updateLearnerKnowledgeGraph(
       const targetStatus = mapConceptStatusToLearnerStatus(item.status);
       const reviewDue = calculateReviewDue(targetStatus);
 
-      // Check if the user already has a record for this concept
-      const { data: existingLC, error: lcSelectError } = await supabase
-        .from("learner_concepts")
-        .select("id, mastery, status, review_due")
-        .eq("user_id", userId)
-        .eq("concept_id", concept.id)
-        .maybeSingle();
+      // Check existing in Supabase or local store
+      let existingLC: { id: string; mastery: number; status: string } | null = null;
 
-      if (lcSelectError) {
-        console.warn("[Knowledge Graph] Error fetching learner concept:", lcSelectError);
+      if (isSupabaseConfigured()) {
+        try {
+          const { data } = await supabase
+            .from("learner_concepts")
+            .select("id, mastery, status, review_due")
+            .eq("user_id", userId)
+            .eq("concept_id", concept.id)
+            .maybeSingle();
+          if (data) existingLC = data;
+        } catch {
+          // ignore
+        }
+      }
+
+      if (!existingLC) {
+        const localLC = getLocalLearnerConcept(userId, concept.id);
+        if (localLC) existingLC = localLC;
       }
 
       if (existingLC) {
-        // Adjust existing mastery incrementally without blind resets
         const newMastery = adjustMastery(Number(existingLC.mastery), item.status);
 
-        await supabase
-          .from("learner_concepts")
-          .update({
-            mastery: newMastery,
-            status: targetStatus,
-            review_due: reviewDue,
-          })
-          .eq("id", existingLC.id);
-      } else {
-        // Insert initial learner concept record
-        const initialMastery = getInitialMastery(item.status);
+        if (isSupabaseConfigured()) {
+          try {
+            await supabase
+              .from("learner_concepts")
+              .update({
+                mastery: newMastery,
+                status: targetStatus,
+                review_due: reviewDue,
+              })
+              .eq("id", existingLC.id);
+          } catch {
+            // ignore
+          }
+        }
 
-        await supabase.from("learner_concepts").insert({
+        saveLocalLearnerConcept({
+          id: existingLC.id,
+          user_id: userId,
+          concept_id: concept.id,
+          mastery: newMastery,
+          status: targetStatus,
+          review_due: reviewDue,
+          last_reviewed_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+        });
+      } else {
+        const initialMastery = getInitialMastery(item.status);
+        const newId = crypto.randomUUID();
+
+        if (isSupabaseConfigured()) {
+          try {
+            await supabase.from("learner_concepts").insert({
+              id: newId,
+              user_id: userId,
+              concept_id: concept.id,
+              mastery: initialMastery,
+              status: targetStatus,
+              review_due: reviewDue,
+            });
+          } catch {
+            // ignore
+          }
+        }
+
+        saveLocalLearnerConcept({
+          id: newId,
           user_id: userId,
           concept_id: concept.id,
           mastery: initialMastery,
           status: targetStatus,
           review_due: reviewDue,
+          last_reviewed_at: null,
+          created_at: new Date().toISOString(),
         });
       }
     } catch (err) {
@@ -272,39 +343,86 @@ export async function updateLearnerKnowledgeGraph(
         );
         conceptIdMap.set(concept.normalized_name, concept.id);
 
-        const { data: existingLC } = await supabase
-          .from("learner_concepts")
-          .select("id, mastery, status, review_due")
-          .eq("user_id", userId)
-          .eq("concept_id", concept.id)
-          .maybeSingle();
+        let existingLC: { id: string; mastery: number; status: string } | null = null;
+        if (isSupabaseConfigured()) {
+          try {
+            const { data } = await supabase
+              .from("learner_concepts")
+              .select("id, mastery, status, review_due")
+              .eq("user_id", userId)
+              .eq("concept_id", concept.id)
+              .maybeSingle();
+            if (data) existingLC = data;
+          } catch {
+            // ignore
+          }
+        }
+
+        if (!existingLC) {
+          const localLC = getLocalLearnerConcept(userId, concept.id);
+          if (localLC) existingLC = localLC;
+        }
 
         const reviewDueTomorrow = calculateReviewDue("weak");
 
         if (existingLC) {
-          // If concept was previously "strong", downgrade to "weak"
           const newStatus = existingLC.status === "strong" ? "weak" : existingLC.status;
           const newMastery = Math.max(
             0,
             Math.round((Number(existingLC.mastery) - 0.05) * 100) / 100
           );
 
-          await supabase
-            .from("learner_concepts")
-            .update({
-              status: newStatus,
-              mastery: newMastery,
-              review_due: reviewDueTomorrow,
-            })
-            .eq("id", existingLC.id);
+          if (isSupabaseConfigured()) {
+            try {
+              await supabase
+                .from("learner_concepts")
+                .update({
+                  status: newStatus,
+                  mastery: newMastery,
+                  review_due: reviewDueTomorrow,
+                })
+                .eq("id", existingLC.id);
+            } catch {
+              // ignore
+            }
+          }
+
+          saveLocalLearnerConcept({
+            id: existingLC.id,
+            user_id: userId,
+            concept_id: concept.id,
+            mastery: newMastery,
+            status: newStatus,
+            review_due: reviewDueTomorrow,
+            last_reviewed_at: new Date().toISOString(),
+            created_at: new Date().toISOString(),
+          });
         } else {
-          // New concept identified as a misconception starts weak
-          await supabase.from("learner_concepts").insert({
+          const newId = crypto.randomUUID();
+          if (isSupabaseConfigured()) {
+            try {
+              await supabase.from("learner_concepts").insert({
+                id: newId,
+                user_id: userId,
+                concept_id: concept.id,
+                mastery: 0.25,
+                status: "weak",
+                review_due: reviewDueTomorrow,
+              });
+            } catch {
+              // ignore
+            }
+          }
+
+          saveLocalLearnerConcept({
+            id: newId,
             user_id: userId,
             concept_id: concept.id,
             mastery: 0.25,
             status: "weak",
             review_due: reviewDueTomorrow,
+            last_reviewed_at: null,
+            created_at: new Date().toISOString(),
           });
         }
       } catch (err) {
@@ -319,38 +437,47 @@ export async function updateLearnerKnowledgeGraph(
       const normalized = normalizeConceptName(item.name);
       const childConceptId = conceptIdMap.get(normalized);
 
-      // Avoid self-relations and missing references
       if (!childConceptId || childConceptId === mainConceptId) {
         continue;
       }
 
-      // Infer relation: "requires" if student was confused/attempting, otherwise "related_to"
       const relationType =
         item.status === "confused" || item.status === "attempted"
           ? "requires"
           : "related_to";
 
-      try {
-        // Check if relation already exists to prevent duplicate edges
-        const { data: existingRel } = await supabase
-          .from("concept_relations")
-          .select("id")
-          .eq("from_concept_id", mainConceptId)
-          .eq("to_concept_id", childConceptId)
-          .eq("relation_type", relationType)
-          .maybeSingle();
+      const relationId = crypto.randomUUID();
 
-        if (!existingRel) {
-          await supabase.from("concept_relations").insert({
-            from_concept_id: mainConceptId,
-            to_concept_id: childConceptId,
-            relation_type: relationType,
-          });
+      if (isSupabaseConfigured()) {
+        try {
+          const { data: existingRel } = await supabase
+            .from("concept_relations")
+            .select("id")
+            .eq("from_concept_id", mainConceptId)
+            .eq("to_concept_id", childConceptId)
+            .eq("relation_type", relationType)
+            .maybeSingle();
+
+          if (!existingRel) {
+            await supabase.from("concept_relations").insert({
+              id: relationId,
+              from_concept_id: mainConceptId,
+              to_concept_id: childConceptId,
+              relation_type: relationType,
+            });
+          }
+        } catch {
+          // ignore
         }
-      } catch (err) {
-        // Silently tolerate unique relation constraint race conditions
-        console.warn("[Knowledge Graph] Skipped duplicate concept relation:", err);
       }
+
+      saveLocalConceptRelation({
+        id: relationId,
+        from_concept_id: mainConceptId,
+        to_concept_id: childConceptId,
+        relation_type: relationType,
+        created_at: new Date().toISOString(),
+      });
     }
   }
 }

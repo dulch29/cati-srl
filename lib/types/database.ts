@@ -78,7 +78,7 @@ export type Review = {
   explanation: string | null;
   difficulty: "easy" | "medium" | "hard" | null;
   student_answer: string | null;
-  result: "correct" | "partial" | "incorrect" | null;
+  result: "pending" | "correct" | "partially_correct" | "incorrect" | "partial" | null;
   created_at: string;
   concept?: Concept;
 };
@@ -231,7 +231,7 @@ export type Database = {
           explanation?: string | null;
           difficulty?: "easy" | "medium" | "hard" | null;
           student_answer?: string | null;
-          result?: "correct" | "partial" | "incorrect" | null;
+          result?: "pending" | "correct" | "partially_correct" | "incorrect" | "partial" | null;
           created_at?: string;
         };
         Update: {
@@ -243,7 +243,7 @@ export type Database = {
           explanation?: string | null;
           difficulty?: "easy" | "medium" | "hard" | null;
           student_answer?: string | null;
-          result?: "correct" | "partial" | "incorrect" | null;
+          result?: "pending" | "correct" | "partially_correct" | "incorrect" | "partial" | null;
           created_at?: string;
         };
         Relationships: [];

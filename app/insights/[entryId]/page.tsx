@@ -26,6 +26,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { JournalAnalysis } from "@/lib/ai/schemas/journal-analysis";
+import {
+  isSupabaseConfigured,
+  getLocalJournalEntry,
+  getLocalAiAnalysis,
+} from "@/lib/supabase/local-store";
 
 interface PageProps {
   params: Promise<{ entryId: string }>;
@@ -64,15 +69,38 @@ export default async function InsightsPage({ params }: PageProps) {
   const streak = profile?.streak ?? 3;
   const xp = profile?.xp ?? 275;
 
-  // 3. Fetch journal entry
-  const { data: journal, error: journalError } = await dbClient
-    .from("journal_entries")
-    .select("*")
-    .eq("id", entryId)
-    .maybeSingle();
+  // 3. Fetch journal entry (from Supabase if configured, otherwise local store)
+  let journal: {
+    id: string;
+    user_id: string;
+    subject: string;
+    topic: string;
+    content: string;
+    self_confidence: number;
+    created_at: string;
+  } | null = null;
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { data } = await dbClient
+        .from("journal_entries")
+        .select("*")
+        .eq("id", entryId)
+        .maybeSingle();
+      if (data) {
+        journal = data;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  if (!journal) {
+    journal = getLocalJournalEntry(entryId);
+  }
 
   // Handle journal not found
-  if (journalError || !journal) {
+  if (!journal) {
     return (
       <AppShell userEmail={userEmail} streak={streak} xp={xp}>
         <div className="max-w-2xl mx-auto py-12 text-center space-y-4">
@@ -119,16 +147,33 @@ export default async function InsightsPage({ params }: PageProps) {
     );
   }
 
-  // 4. Fetch AI Analysis record
-  const { data: aiRecord } = await dbClient
-    .from("ai_analyses")
-    .select("*")
-    .eq("journal_entry_id", entryId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  // 4. Fetch AI Analysis record (from Supabase if configured, otherwise local store)
+  let analysis: JournalAnalysis | null = null;
 
-  const analysis = (aiRecord?.analysis as JournalAnalysis | null) || null;
+  if (isSupabaseConfigured()) {
+    try {
+      const { data: aiRecord } = await dbClient
+        .from("ai_analyses")
+        .select("*")
+        .eq("journal_entry_id", entryId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (aiRecord?.analysis) {
+        analysis = aiRecord.analysis as JournalAnalysis;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  if (!analysis) {
+    const localAi = getLocalAiAnalysis(entryId);
+    if (localAi) {
+      analysis = localAi.analysis;
+    }
+  }
 
   // Confidence gap badge helper
   const getGapBadge = (gap: string) => {

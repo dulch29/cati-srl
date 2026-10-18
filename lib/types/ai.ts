@@ -13,17 +13,15 @@ export type {
   AnalyzeJournalRequest,
 } from "../ai/schemas/journal-analysis";
 
-export interface ReviewQuestion {
-  concept: string;
-  question: string;
-  difficulty: "easy" | "medium" | "hard";
-  expected_answer: string;
-  explanation: string;
-}
-
-export interface ReviewGenerationResponse {
-  questions: ReviewQuestion[];
-}
+export type {
+  ReviewDifficulty,
+  GeneratedQuestion,
+  GenerateReviewResponse,
+  EvaluationResult,
+  EvaluateReviewResponse,
+  GenerateReviewRequest,
+  EvaluateReviewRequest,
+} from "../ai/schemas/review";
 
 export interface QuestTask {
   id: string;

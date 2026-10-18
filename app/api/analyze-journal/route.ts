@@ -8,6 +8,11 @@ import {
 import { buildJournalAnalysisPrompt } from "@/lib/ai/prompts/analyze-journal";
 import { callGeminiForAnalysis } from "@/lib/ai/clients/gemini";
 import { updateLearnerKnowledgeGraph } from "@/lib/ai/knowledge-graph";
+import {
+  isSupabaseConfigured,
+  saveLocalJournalEntry,
+  saveLocalAiAnalysis,
+} from "@/lib/supabase/local-store";
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,32 +41,43 @@ export async function POST(request: NextRequest) {
     if (user) {
       activeUserId = user.id;
 
-      // Ensure user profile exists
-      await supabase.from("users_profile").upsert(
-        {
-          id: user.id,
-          display_name:
-            user.user_metadata?.display_name ||
-            user.email?.split("@")[0] ||
-            "Student Learner",
-        },
-        { onConflict: "id" }
-      );
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from("users_profile").upsert(
+            {
+              id: user.id,
+              display_name:
+                user.user_metadata?.display_name ||
+                user.email?.split("@")[0] ||
+                "Student Learner",
+            },
+            { onConflict: "id" }
+          );
+        } catch {
+          // ignore if remote table is not yet reachable
+        }
+      }
     } else {
-      // Demo session fallback for offline/local evaluation
+      // Demo session fallback
       const adminClient = createAdminClient();
       dbClient = adminClient;
       activeUserId = "00000000-0000-0000-0000-000000000001";
 
-      await adminClient.from("users_profile").upsert(
-        {
-          id: activeUserId,
-          display_name: "Alex Chen (Demo)",
-          xp: 275,
-          streak: 3,
-        },
-        { onConflict: "id" }
-      );
+      if (isSupabaseConfigured()) {
+        try {
+          await adminClient.from("users_profile").upsert(
+            {
+              id: activeUserId,
+              display_name: "Alex Chen (Demo)",
+              xp: 275,
+              streak: 3,
+            },
+            { onConflict: "id" }
+          );
+        } catch {
+          // ignore
+        }
+      }
     }
 
     // 2. Validate request body with Zod
@@ -88,29 +104,51 @@ export async function POST(request: NextRequest) {
 
     const { subject, topic, content, self_confidence } = bodyValidation.data;
 
-    // 3. Save raw journal entry in Supabase first
-    const { data: journalEntry, error: journalError } = await dbClient
-      .from("journal_entries")
-      .insert({
-        user_id: activeUserId,
-        subject,
-        topic,
-        content,
-        self_confidence,
-      })
-      .select("id")
-      .single();
+    // 3. Save raw journal entry
+    let journalEntryId: string = crypto.randomUUID();
+    let savedToSupabase = false;
 
-    if (journalError || !journalEntry) {
-      console.error(
-        "[POST /api/analyze-journal] Database error saving journal entry:",
-        journalError
-      );
-      return NextResponse.json(
-        { error: "Failed to save journal reflection to database." },
-        { status: 500 }
-      );
+    if (isSupabaseConfigured()) {
+      try {
+        const { data: journalEntry, error: journalError } = await dbClient
+          .from("journal_entries")
+          .insert({
+            user_id: activeUserId,
+            subject,
+            topic,
+            content,
+            self_confidence,
+          })
+          .select("id")
+          .single();
+
+        if (!journalError && journalEntry) {
+          journalEntryId = journalEntry.id;
+          savedToSupabase = true;
+        } else {
+          console.warn(
+            "[POST /api/analyze-journal] Supabase insert failed; using local demo store:",
+            journalError?.message
+          );
+        }
+      } catch (err) {
+        console.warn(
+          "[POST /api/analyze-journal] Supabase connection error; using local demo store:",
+          err
+        );
+      }
     }
+
+    // Always mirror to local demo store
+    saveLocalJournalEntry({
+      id: journalEntryId,
+      user_id: activeUserId,
+      subject,
+      topic,
+      content,
+      self_confidence,
+      created_at: new Date().toISOString(),
+    });
 
     // 4. Send reflection to Gemini AI for metacognitive analysis
     const prompt = buildJournalAnalysisPrompt({
@@ -133,7 +171,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: errMsg,
-          journalEntryId: journalEntry.id,
+          journalEntryId,
         },
         { status: 502 }
       );
@@ -153,7 +191,7 @@ export async function POST(request: NextRequest) {
         {
           error:
             "AI cognitive analysis returned an invalid JSON response structure. Please resubmit.",
-          journalEntryId: journalEntry.id,
+          journalEntryId,
         },
         { status: 422 }
       );
@@ -171,7 +209,7 @@ export async function POST(request: NextRequest) {
           error:
             "AI analysis response did not pass quality validation. Analysis was not saved.",
           details: aiValidation.error.flatten().fieldErrors,
-          journalEntryId: journalEntry.id,
+          journalEntryId,
         },
         { status: 422 }
       );
@@ -179,27 +217,29 @@ export async function POST(request: NextRequest) {
 
     const validatedAnalysis = aiValidation.data;
 
-    // 6. Save validated analysis in ai_analyses table
-    const { error: analysisSaveError } = await dbClient
-      .from("ai_analyses")
-      .insert({
-        journal_entry_id: journalEntry.id,
-        main_topic: validatedAnalysis.main_topic,
-        analysis: validatedAnalysis,
-      });
-
-    if (analysisSaveError) {
-      console.error(
-        "[POST /api/analyze-journal] Database error saving ai_analyses:",
-        analysisSaveError
-      );
-      return NextResponse.json(
-        { error: "Failed to persist validated AI analysis in database." },
-        { status: 500 }
-      );
+    // 6. Save validated analysis
+    if (savedToSupabase) {
+      try {
+        await dbClient.from("ai_analyses").insert({
+          journal_entry_id: journalEntryId,
+          main_topic: validatedAnalysis.main_topic,
+          analysis: validatedAnalysis,
+        });
+      } catch (err) {
+        console.warn("[POST /api/analyze-journal] Error saving analysis to Supabase:", err);
+      }
     }
 
-    // 7. Update learner concepts and knowledge graph
+    // Always mirror to local demo store
+    saveLocalAiAnalysis({
+      id: crypto.randomUUID(),
+      journal_entry_id: journalEntryId,
+      main_topic: validatedAnalysis.main_topic,
+      analysis: validatedAnalysis,
+      created_at: new Date().toISOString(),
+    });
+
+    // 7. Update learner concepts and knowledge graph (Supabase and local demo store)
     try {
       await updateLearnerKnowledgeGraph(
         dbClient,
@@ -208,18 +248,17 @@ export async function POST(request: NextRequest) {
         subject
       );
     } catch (kgError) {
-      console.error(
+      console.warn(
         "[POST /api/analyze-journal] Error updating learner knowledge graph:",
         kgError
       );
-      // Non-fatal for the response: the journal and analysis are safely saved
     }
 
     // 8. Return created journal entry ID on success
     return NextResponse.json(
       {
         success: true,
-        journalEntryId: journalEntry.id,
+        journalEntryId,
       },
       { status: 200 }
     );

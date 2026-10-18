@@ -1,22 +1,43 @@
 import { GoogleGenAI } from "@google/genai";
+import fs from "fs";
+import path from "path";
 
 let geminiClientInstance: GoogleGenAI | null = null;
+
+function resolveGeminiApiKey(): string | undefined {
+  if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim() !== "") {
+    return process.env.GEMINI_API_KEY.trim();
+  }
+  try {
+    const envPath = path.join(process.cwd(), ".env.local");
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, "utf8");
+      const match = content.match(/GEMINI_API_KEY=([^\r\n]+)/);
+      if (match && match[1] && match[1].trim() !== "" && match[1].trim() !== "your-gemini-api-key-here") {
+        return match[1].trim();
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return undefined;
+}
 
 /**
  * Returns a singleton instance of the official Google GenAI client.
  * Strictly runs on the server; never import or call from client components.
  */
 export function getGeminiClient(): GoogleGenAI {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = resolveGeminiApiKey();
 
-  if (!apiKey || apiKey.trim() === "" || apiKey === "your-gemini-api-key-here") {
+  if (!apiKey || apiKey === "your-gemini-api-key-here") {
     throw new Error(
       "GEMINI_API_KEY is not configured. Please supply a valid Google Gemini API key in your environment variables (.env.local)."
     );
   }
 
   if (!geminiClientInstance) {
-    geminiClientInstance = new GoogleGenAI({ apiKey: apiKey.trim() });
+    geminiClientInstance = new GoogleGenAI({ apiKey });
   }
 
   return geminiClientInstance;
@@ -41,8 +62,8 @@ export async function callGeminiForAnalysis(prompt: string): Promise<string> {
   const client = getGeminiClient();
 
   // Primary model preference, configurable via GEMINI_MODEL
-  const primaryModel = process.env.GEMINI_MODEL || "gemini-2.5-flash";
-  const fallbackModels = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-3.8-flash"];
+  const primaryModel = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+  const fallbackModels = ["gemini-3.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash"];
 
   const candidateModels = [
     primaryModel,

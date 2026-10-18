@@ -237,22 +237,221 @@ GEMINI_API_KEY=your-gemini-api-key
 - **CTA**: "Start Review" button linking to `/review`.
 ---
 
+## 🔁 Phase 3: Adaptive Review, Mastery Updates & Knowledge Graph (Completed)
+
+Phase 3 closes the metacognitive loop by translating identified weak concepts and misconceptions into active recall practice, updating the learner's knowledge graph in real time, and visualizing progress on an interactive concept map.
+
+### Metacognitive Closed-Loop Architecture
+
+```
+                                  ┌─────────────────────────────┐
+                                  │   Student Journal Entry     │
+                                  │       (/journal/new)        │
+                                  └──────────────┬──────────────┘
+                                                 │
+                                                 ▼
+                                  ┌─────────────────────────────┐
+                                  │   AI Learning Analysis      │
+                                  │  (POST /api/analyze-journal)│
+                                  └──────────────┬──────────────┘
+                                                 │
+                                                 ▼
+ ┌───────────────────────────────────────────────────────────────────────────────┐
+ │                        Learner Knowledge Graph                                │
+ │               (concepts, learner_concepts, concept_relations)                │
+ └───────────────────────┬───────────────────────────────▲───────────────────────┘
+                         │                               │
+       Weak / Due        │                               │  Mastery Updated
+       Concepts Selected │                               │  Review Scheduled
+                         ▼                               │
+ ┌──────────────────────────────────────┐                │
+ │    POST /api/generate-review         │                │
+ │    • Priority Scoring Logic          │                │
+ │    • Gemini 3.8 Flash Generation     │                │
+ │    • 3 Targeted Cognitive Questions  │                │
+ └───────────────────────┬──────────────┘                │
+                         │                               │
+                         ▼                               │
+ ┌──────────────────────────────────────┐                │
+ │     Interactive Review Page          │                │
+ │            (/review)                 │                │
+ │    • 1 Question at a time            │                │
+ │    • Real-time Answer Submission     │                │
+ └───────────────────────┬──────────────┘                │
+                         │                               │
+                         ▼                               │
+ ┌──────────────────────────────────────┐                │
+ │    POST /api/evaluate-review         │                │
+ │    • Gemini Metacognitive Grading    │                │
+ │    • Correct / Partial / Incorrect   │                │
+ │    • Misconception Verification      │────────────────┘
+ │    • XP (+15/+8/+3/+10) & Streaks    │
+ └───────────────────────┬──────────────┘
+                         │
+                         ▼
+ ┌───────────────────────────────────────────────────────────────┐
+ │               Live Knowledge Map Visualization                │
+ │                     (/knowledge-map)                          │
+ │    • Mastery Colors: Red (<0.4), Yellow (0.4-0.7), Green (>0.7│
+ │    • Interactive SVG Directed Graph                           │
+ │    • Prerequisite Edge Navigation & Node Inspector Drawer     │
+ └───────────────────────────────────────────────────────────────┘
+```
+
+### Key Components & Endpoints
+
+#### 1. Concept Selection Priority (`lib/knowledge-graph/select-review-concepts.ts`)
+- Automatically evaluates learner concepts for review based on a strict priority ladder:
+  1. `review_due <= today` (Overdue or due today)
+  2. `mastery < 0.4` (Critically weak concepts)
+  3. Concepts associated with recent misconceptions from journal analyses
+  4. Foundational prerequisites of weak concepts
+  5. Concepts with status `developing`
+- Excludes concepts with mastery $> 0.8$ unless overdue.
+- Selects a maximum of 3 targeted concepts.
+
+#### 2. Review Generation (`POST /api/generate-review`)
+- Authenticates session and selects up to 3 priority concepts.
+- Prompts Google Gemini with strict high-school cognitive calibration rules (no rote memorization).
+- Validates the structured output with Zod (`GenerateReviewResponseSchema`).
+- Persists questions in the `reviews` database table with `result = "pending"`.
+- Returns client-safe questions without revealing expected answers.
+
+#### 3. Answer Evaluation (`POST /api/evaluate-review`)
+- Ensures question ownership and verifies `result === "pending"` (prevents re-evaluation tampering).
+- Evaluates student response using Gemini for true semantic understanding.
+- Classifies answer as `correct`, `partially_correct`, or `incorrect`.
+- Detects remaining or persistent misconceptions with constructive feedback.
+- Updates database atomically:
+  - Saves `student_answer`, `result`, and `explanation`
+  - Updates concept mastery in `learner_concepts`
+  - Schedules next `review_due`
+  - Awards XP and updates consecutive daily active streak in `users_profile`
+
+#### 4. Mastery & Review Scheduling Rules (`lib/knowledge-graph/update-mastery.ts`)
+- **Mastery Delta**:
+  - `correct`: $+0.15$
+  - `partially_correct`: $+0.05$
+  - `incorrect`: $-0.10$
+  - `misconception_detected`: $-0.05$ additional penalty
+  - Clamped strictly between $0.00$ and $1.00$
+- **Next Review Schedule**:
+  - `mastery < 0.4`: Tomorrow (`weak`)
+  - `0.4 <= mastery <= 0.7`: In 3 days (`developing`)
+  - `mastery > 0.7`: In 7 days (`strong`)
+
+#### 5. Gamification Mechanics (`lib/knowledge-graph/xp-streak.ts`)
+- **XP**:
+  - `correct`: $+15\text{ XP}$
+  - `partially_correct`: $+8\text{ XP}$
+  - `incorrect`: $+3\text{ XP}$
+  - Completing all 3 questions in a session: $+10\text{ XP}$ bonus
+- **Streak**:
+  - Active yesterday: `streak += 1`
+  - Active today: maintain streak
+  - Inactive $> 1$ day: reset to `1`
+
+#### 6. Interactive Knowledge Map (`/knowledge-map`)
+- Built with a lightweight, responsive SVG engine (no heavyweight external canvas dependencies).
+- Nodes color-coded by mastery:
+  - 🔴 **Red**: `mastery < 0.4` (Weak / review needed)
+  - 🟡 **Yellow**: `0.4 <= mastery <= 0.7` (Developing)
+  - 🟢 **Green**: `mastery > 0.7` (Strong / mastered)
+- Shows mastery percentage inside every node.
+- Directed edges illustrate `requires` and `related_to` cognitive relationships.
+- Interactive Side Inspector Panel displays:
+  - Selected concept name, subject, and status
+  - Animated mastery progress bar
+  - Review schedule dates (last reviewed, next review due)
+  - Grounded misconception diagnostic cards
+  - Clickable related prerequisite chips
+  - Direct "Practice Concept Now" button linking to `/review`.
+- Friendly zero-state when no concepts have been created yet.
+
+#### 7. Live Dashboard Integration (`/dashboard`)
+- Real-time user metrics:
+  - Current streak days
+  - Total XP points earned
+  - Number of pending/overdue reviews
+  - Number of weak concepts needing practice
+- AI Recommended Next Action banner parsed from the latest journal analysis.
+- Recent reflection cards with confidence scores and direct insight links.
+- Onboarding empty state explaining the SRL loop for new learners.
+
+---
+
+## 🧪 Phase 3 Demo Test Walkthrough
+
+Follow this step-by-step test to experience the entire self-regulated feedback loop in under 2 minutes:
+
+### 1. Submit the Demo Journal Reflection
+1. Start the app: `npm run dev`
+2. Open [http://localhost:3000/journal/new](http://localhost:3000/journal/new).
+3. Click **"Auto-fill Test Sample"** (or input):
+   - **Subject**: `Computer Science`
+   - **Topic**: `Python Recursion`
+   - **Content**:
+     > *"Today I studied Python recursion. I understand that a function calls itself, but I got confused about where to put the base case. I tried factorial and got an error."*
+   - **Confidence**: `4 - Confident`
+4. Click **"Analyze Reflection"**.
+5. Observe the insights page:
+   - `Base case` is detected as a misconception and marked `confused` / `weak`.
+   - Inferred confidence is `2/5`, highlighting an **Overconfident** calibration gap.
+
+### 2. Launch Adaptive Review
+1. Click **"Start Review"** (or open [http://localhost:3000/review](http://localhost:3000/review)).
+2. The system calls `POST /api/generate-review`:
+   - It prioritizes `Base case` and related recursion concepts.
+   - Generates 3 targeted questions on stopping conditions and recursive call positioning.
+3. Answer the questions:
+   - Question 1 (e.g. *"Where must a base case be placed in a recursive function?"*):
+     - Try answering correctly: *"At the very beginning of the function before any recursive calls."*
+     - See **Green** "Correct" badge with $+15\text{ XP}$ awarded and mastery increased.
+   - Question 2:
+     - Try an incomplete answer or answer with a flaw.
+     - Observe AI feedback explaining what was missing without revealing the full answer.
+4. Complete all 3 questions:
+   - Review Summary reveals:
+     - Total questions correct / partial
+     - Total XP earned (including $+10$ completion bonus)
+     - Improved concepts vs. concepts still needing work
+     - Updated consecutive streak
+
+### 3. Inspect the Updated Knowledge Map
+1. Click **"Explore Knowledge Map"** (or open [http://localhost:3000/knowledge-map](http://localhost:3000/knowledge-map)).
+2. Notice the interactive visual DAG:
+   - `Base case` node is colored dynamically based on your review results (Red if mastery $< 0.4$, Yellow if developing $0.4 - 0.7$).
+   - Click the node to open the **Concept Inspector** side panel.
+   - See the exact next review date (scheduled for tomorrow if weak, or 3 days if developing).
+   - Check the detected misconception and click connected prerequisite nodes.
+
+### 4. Check the Updated Dashboard
+1. Open [http://localhost:3000/dashboard](http://localhost:3000/dashboard).
+2. Verify live metrics:
+   - Updated XP and streak
+   - Pending reviews count updated
+   - Weak concepts count reflected
+   - Latest AI Recommended Next Action displayed prominently
+
+---
+
 ## 💡 What Cati SRL Demonstrates
 
-1. **Metacognitive Calibration over Chatbot Answers**: Rather than an AI answering questions for the student, Cati acts as an intelligent mirror that detects whether a student is overconfident or underconfident relative to their actual comprehension.
-2. **Concept-Level Knowledge Graphs**: Instead of treating course material as disjointed flashcards, Cati maps knowledge into prerequisite trees where weak foundations trigger proactive remediation.
-3. **Self-Regulated Learning (SRL) Discipline**: Encourages daily active recall and reflection through clear, non-punitive gamification (XP, streaks, and bite-sized 15-minute quests).
+1. **Metacognitive Calibration over Chatbot Answers**: Rather than an AI solving homework for the student, Cati acts as an intelligent mirror detecting overconfidence and underconfidence relative to actual comprehension.
+2. **Dynamic Knowledge Graphs**: Instead of treating course material as disjointed flashcards, Cati maps knowledge into prerequisite trees where weak foundations trigger proactive remediation.
+3. **Adaptive Feedback Loop**: Bridges journal reflections to immediate targeted practice, closing the gap between study intention and conceptual retention.
 
 ---
 
 ## 🚀 Future Roadmap
 
-- **Phase 3**: Long-term calibration trend analytics (visualizing how a student's metacognitive self-accuracy evolves over time).
-- **Phase 4**: Automated prerequisite graph extraction for custom student syllabi.
-- **Phase 5**: Anki deck export and Canvas / Moodle LMS synchronization.
+- **Phase 4**: Automated prerequisite graph extraction from uploaded course syllabi & PDFs.
+- **Phase 5**: Micro-quests system with Pomodoro study companion and metacognitive nudges.
+- **Phase 6**: Canvas / Moodle LMS synchronization and Anki flashcard deck export.
 
 ---
 
 ## 📄 License
 
 MIT License • Created for the Next Byte Hacks V5 Hackathon.
+
