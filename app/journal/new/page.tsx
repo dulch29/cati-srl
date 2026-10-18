@@ -4,11 +4,12 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   BookOpen,
-  Sparkles,
-  Info,
-  CheckCircle2,
-  HelpCircle,
+  AlertCircle,
   Lightbulb,
+  HelpCircle,
+  ArrowRight,
+  Brain,
+  Loader2,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import {
@@ -29,62 +30,119 @@ export default function NewJournalPage() {
   const [subject, setSubject] = useState("Computer Science");
   const [topic, setTopic] = useState("");
   const [content, setContent] = useState("");
-  const [confidence, setConfidence] = useState<number>(3);
+  const [confidence, setConfidence] = useState<number>(4);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [savedSuccess, setSavedSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Confidence labels required:
+  // 1 = Very unsure, 2 = Unsure, 3 = Neutral, 4 = Confident, 5 = Very confident
   const confidenceLabels: Record<
     number,
     { title: string; desc: string; color: string }
   > = {
     1: {
-      title: "1 - Completely Lost",
-      desc: "I struggled to follow the basic mechanics or logic.",
+      title: "1 - Very unsure",
+      desc: "Completely lost or uncertain about fundamental concepts.",
       color: "text-rose-400",
     },
     2: {
-      title: "2 - Shaky Understanding",
-      desc: "I grasp bits and pieces, but feel uncertain applying it.",
+      title: "2 - Unsure",
+      desc: "Grasp bits and pieces, but feel shaky about applying it.",
       color: "text-amber-400",
     },
     3: {
-      title: "3 - Developing Mastery",
-      desc: "I understand the concept but might stumble on edge cases.",
+      title: "3 - Neutral",
+      desc: "Average confidence; understand basics but uncertain on edge cases.",
       color: "text-yellow-400",
     },
     4: {
       title: "4 - Confident",
-      desc: "I can explain it and write basic implementations accurately.",
+      desc: "Can explain and implement core mechanics comfortably.",
       color: "text-indigo-400",
     },
     5: {
-      title: "5 - Crystal Clear",
-      desc: "I can teach this to someone else and debug complex issues.",
+      title: "5 - Very confident",
+      desc: "Full mastery; could easily teach or debug complex scenarios.",
       color: "text-emerald-400",
     },
   };
 
-  const handlePreFillDemo = () => {
+  /**
+   * Pre-fills the exact test case from the specification:
+   * “Today I studied Python recursion. I understand that a function calls itself,
+   * but I got confused about where to put the base case. I tried factorial and got an error.”
+   */
+  const handlePreFillSample = () => {
+    setErrorMessage(null);
     setSubject("Computer Science");
-    setTopic("Recursive Functions and Factorial");
+    setTopic("Python Recursion");
     setContent(
-      "Today I tried writing a recursive function for factorial in Python. It worked for 3! and 4!, but when I tried passing -1 it crashed with a Maximum Recursion Depth error. I don't really get why it kept calling itself forever without stopping."
+      "Today I studied Python recursion. I understand that a function calls itself, but I got confused about where to put the base case. I tried factorial and got an error."
     );
-    setConfidence(4);
+    setConfidence(4); // Tests overconfidence calibration against confusion evidence
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setErrorMessage(null);
 
-    // In Phase 1: validate form and simulate saving reflection
-    setTimeout(() => {
+    // Client-side validations
+    const trimmedTopic = topic.trim();
+    const trimmedContent = content.trim();
+
+    if (!trimmedTopic) {
+      setErrorMessage("Please enter a study topic.");
+      return;
+    }
+
+    if (trimmedContent.length < 10) {
+      setErrorMessage(
+        "Please write a bit more in your reflection (at least 10 characters) so Cati can analyze your thinking."
+      );
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      const response = await fetch("/api/analyze-journal", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          subject,
+          topic: trimmedTopic,
+          content: trimmedContent,
+          self_confidence: confidence,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+            "Failed to complete AI learning analysis. Please try again."
+        );
+      }
+
+      if (result.journalEntryId) {
+        // Redirect directly to the generated insights page
+        router.push(`/insights/${result.journalEntryId}`);
+      } else {
+        throw new Error("Invalid response format received from server.");
+      }
+    } catch (err: unknown) {
+      console.error("[NewJournalPage] Submission error:", err);
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred during analysis.";
+      setErrorMessage(msg);
+    } finally {
       setIsSubmitting(false);
-      setSavedSuccess(true);
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 1500);
-    }, 800);
+    }
   };
 
   return (
@@ -95,60 +153,49 @@ export default function NewJournalPage() {
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-indigo-400 mb-1">
               <BookOpen className="h-3.5 w-3.5" />
-              <span>Step 1: Daily Reflection</span>
+              <span>Step 1: Daily Learning Journal</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              New Learning Journal
+              Log Your Study Reflection
             </h1>
             <p className="mt-1 text-sm text-slate-400">
-              Reflect on what you studied. In Phase 2, Cati will extract
-              concepts, detect misconceptions, and calibrate your confidence.
+              Reflect honestly on what you practiced. Cati AI will extract
+              concepts, diagnose misconceptions, and calibrate your confidence.
             </p>
           </div>
           <Button
             type="button"
             variant="outline"
             size="sm"
-            onClick={handlePreFillDemo}
-            className="self-start text-xs border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/10"
+            onClick={handlePreFillSample}
+            disabled={isSubmitting}
+            className="self-start text-xs border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/10 shrink-0"
           >
             <Lightbulb className="mr-1.5 h-3.5 w-3.5 text-indigo-400" />
-            Auto-fill Python Sample
+            Auto-fill Test Sample
           </Button>
         </div>
 
-        {/* Phase 1 Informational Note */}
-        <div className="flex items-start gap-3 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-4 text-xs text-indigo-200">
-          <Info className="h-5 w-5 shrink-0 text-indigo-400 mt-0.5" />
-          <div className="space-y-1">
-            <span className="font-semibold text-white">
-              Phase 1 Foundation Mode
-            </span>
-            <p className="text-slate-400 leading-relaxed">
-              This form collects your reflection and self-reported confidence.
-              In Phase 2, submitting this form will trigger the{" "}
-              <code>POST /api/analyze-journal</code> AI pipeline to update your
-              knowledge graph.
-            </p>
-          </div>
-        </div>
-
-        {savedSuccess && (
-          <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs text-emerald-300 animate-in fade-in">
-            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
-            <span>
-              Reflection logged successfully! Redirecting to dashboard...
-            </span>
+        {/* Error notification banner */}
+        {errorMessage && (
+          <div className="flex items-start gap-3 rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-xs text-rose-300 animate-in fade-in">
+            <AlertCircle className="h-5 w-5 shrink-0 text-rose-400 mt-0.5" />
+            <div className="space-y-1">
+              <span className="font-semibold text-rose-200">
+                Analysis Submission Issue
+              </span>
+              <p className="text-rose-300/90 leading-relaxed">{errorMessage}</p>
+            </div>
           </div>
         )}
 
-        <Card className="border-slate-800 bg-slate-900/80 shadow-xl">
+        <Card className="border-slate-800 bg-slate-900/80 shadow-2xl backdrop-blur-sm">
           <form onSubmit={handleSubmit}>
             <CardHeader>
-              <CardTitle>Study Entry Details</CardTitle>
+              <CardTitle>Reflection Details</CardTitle>
               <CardDescription>
-                Be as honest and specific as possible. Metacognitive calibration
-                works best when you record true thoughts.
+                Write down what worked, what errors you hit, and where you felt
+                hesitant.
               </CardDescription>
             </CardHeader>
 
@@ -158,6 +205,7 @@ export default function NewJournalPage() {
                 label="Subject Area"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
+                disabled={isSubmitting}
                 options={[
                   {
                     value: "Computer Science",
@@ -174,21 +222,23 @@ export default function NewJournalPage() {
               {/* Topic Input */}
               <Input
                 label="Topic / Subtopic"
-                placeholder="e.g. Recursion & Base Cases in Python"
+                placeholder="e.g. Python Recursion"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
+                disabled={isSubmitting}
                 required
               />
 
               {/* Journal Content Textarea */}
               <Textarea
                 label="Learning Reflection"
-                placeholder="What did you learn today? What parts felt natural, and where did you feel confused or encounter unexpected behavior?"
+                placeholder="What did you learn today? What parts made sense, and where did you feel confused or encounter unexpected behavior?"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
+                disabled={isSubmitting}
                 rows={7}
                 required
-                helperText="Tip: Describe an example or error you encountered to help the AI detect underlying misconceptions."
+                helperText="Tip: Mention specific errors or examples to help Cati detect underlying misconceptions."
               />
 
               {/* Self-Reported Confidence Slider (1 to 5) */}
@@ -196,7 +246,7 @@ export default function NewJournalPage() {
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                     <HelpCircle className="h-4 w-4 text-indigo-400" />
-                    Self-Reported Confidence (1 to 5)
+                    Self-Reported Confidence
                   </label>
                   <span
                     className={`text-xs font-bold ${confidenceLabels[confidence].color}`}
@@ -211,16 +261,28 @@ export default function NewJournalPage() {
                   max="5"
                   step="1"
                   value={confidence}
+                  disabled={isSubmitting}
                   onChange={(e) => setConfidence(Number(e.target.value))}
-                  className="w-full accent-indigo-500 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                  className="w-full accent-indigo-500 cursor-pointer h-2 bg-slate-800 rounded-lg disabled:opacity-50"
                 />
 
-                <div className="flex justify-between text-[10px] text-slate-500 font-medium px-1">
-                  <span>1: Lost</span>
-                  <span>2: Shaky</span>
-                  <span>3: Developing</span>
-                  <span>4: Confident</span>
-                  <span>5: Mastered</span>
+                {/* 5-Step Slider Labels */}
+                <div className="grid grid-cols-5 text-center text-[10px] text-slate-400 font-medium px-1">
+                  <span className={confidence === 1 ? "text-rose-400 font-bold" : ""}>
+                    1: Very unsure
+                  </span>
+                  <span className={confidence === 2 ? "text-amber-400 font-bold" : ""}>
+                    2: Unsure
+                  </span>
+                  <span className={confidence === 3 ? "text-yellow-400 font-bold" : ""}>
+                    3: Neutral
+                  </span>
+                  <span className={confidence === 4 ? "text-indigo-400 font-bold" : ""}>
+                    4: Confident
+                  </span>
+                  <span className={confidence === 5 ? "text-emerald-400 font-bold" : ""}>
+                    5: Very confident
+                  </span>
                 </div>
 
                 <p className="text-xs text-slate-400 italic">
@@ -228,11 +290,12 @@ export default function NewJournalPage() {
                 </p>
               </div>
 
-              {/* Submit Buttons */}
+              {/* Submit / Cancel Footer */}
               <div className="pt-2 flex items-center justify-between">
                 <Button
                   type="button"
                   variant="ghost"
+                  disabled={isSubmitting}
                   onClick={() => router.push("/dashboard")}
                 >
                   Cancel
@@ -240,11 +303,21 @@ export default function NewJournalPage() {
 
                 <Button
                   type="submit"
-                  isLoading={isSubmitting}
-                  className="shadow-indigo-500/20"
+                  disabled={isSubmitting}
+                  className="shadow-indigo-500/20 min-w-[200px]"
                 >
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Save Reflection (Phase 1)
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Analyzing with AI...
+                    </>
+                  ) : (
+                    <>
+                      <Brain className="mr-2 h-4 w-4" />
+                      Analyze Reflection
+                      <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                    </>
+                  )}
                 </Button>
               </div>
             </CardContent>

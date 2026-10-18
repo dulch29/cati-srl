@@ -132,24 +132,109 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - Supabase SSR authentication client, server client, and Next.js middleware with route protection.
 - Reusable UI component library (`Card`, `Button`, `Input`, `Textarea`, `Select`, `LoadingState`, `EmptyState`).
 - Responsive AppShell with desktop sidebar and mobile bottom navigation.
-- All core application pages:
-  - `/` (Product landing hero)
-  - `/login` (Email/password authentication + 1-Click Demo mode)
-  - `/dashboard` (Today's streak, XP, review count, recommended quest, and recent topics)
-  - `/journal/new` (Reflection editor with 1-5 confidence slider)
-  - `/insights/[entryId]` (Metacognitive insight report preview)
-  - `/review` (Adaptive 3-question practice preview)
-  - `/knowledge-map` (Concept graph with mastery color-coding and node inspector)
-- Comprehensive documentation (`docs/architecture.md`, `docs/product-vision.md`).
+- All core application pages (`/`, `/login`, `/dashboard`, `/journal/new`, `/insights/[entryId]`, `/review`, `/knowledge-map`).
 
-### Planned Phase 2 Scope (Next Phase)
+---
 
-- Implement `POST /api/analyze-journal` powered by Google Gemini API / OpenAI with strict Zod JSON schema validation.
-- Compute confidence gap (`aligned`, `overconfident`, `underconfident`) by comparing student self-confidence to extracted reasoning.
-- Implement `POST /api/generate-review` to dynamically generate 3 adaptive questions from the student's weakest prerequisite concepts.
-- Implement the deterministic mastery engine (+0.15 correct, +0.05 partial, -0.10 incorrect, -0.05 overdue decay).
-- Dynamic SVG/Canvas Knowledge Map rendering directly from Supabase `learner_concepts` and `concept_relations`.
+## 🧠 Phase 2: AI Learning Analysis (Completed)
 
+Phase 2 connects the daily journal reflection form to an end-to-end AI metacognitive evaluation pipeline powered by the Google Gemini API with strict Zod schema validation and automatic learner knowledge graph calibration.
+
+### Core Loop Architecture
+
+```
+Student Journal Form (/journal/new)
+       │
+       ▼ (POST /api/analyze-journal)
+[Auth Check & Save Raw Journal] (journal_entries)
+       │
+       ▼
+[Gemini AI Analysis Engine] (lib/ai/clients/gemini.ts)
+       │
+       ▼
+[Strict Zod Schema Validation] (lib/ai/schemas/journal-analysis.ts)
+       │
+       ├─► [Persist Validated Analysis] (ai_analyses)
+       │
+       ▼
+[Update Learner Knowledge Graph] (lib/ai/knowledge-graph.ts)
+       ├─► Normalize & Upsert Global Concepts (concepts)
+       ├─► Calibrate Mastery & Review Dates (learner_concepts)
+       ├─► Flag Misconceptions as Weak & Due Tomorrow
+       └─► Infer Prerequisite Relations (concept_relations)
+       │
+       ▼
+Student Insights Dashboard (/insights/[entryId])
+```
+
+### Key API & Pipeline Components
+
+- **Endpoint**: `POST /api/analyze-journal`
+  - Validates request payload using Zod.
+  - Requires authenticated session or active demo session.
+  - Persists the raw reflection before invoking the AI model.
+  - Invokes Google Gemini (`gemini-2.5-flash` with automatic fallback to `gemini-2.0-flash` / `gemini-1.5-flash`).
+  - Validates output with `JournalAnalysisSchema` (HTTP 422 on schema failure; invalid data is rejected).
+  - Returns `{ success: true, journalEntryId: "uuid" }`.
+- **Knowledge Graph Updates**:
+  - **Normalization**: Concept names are trimmed, lowercased, and stripped of punctuation for global deduplication.
+  - **Initial Mastery**: `understood` (0.65), `attempted` (0.45), `confused` (0.30), `unknown` (0.20).
+  - **Mastery Calibration**: `understood` (+0.05), `attempted` (+0.02), `confused` (-0.05).
+  - **Review Scheduling**: `weak` (due tomorrow), `developing` (in 3 days), `strong` (in 7 days), `new` (in 3 days).
+  - **Misconception Detection**: Flags related concept as `weak`, lowers mastery by 0.05, and sets review due date to tomorrow.
+  - **Concept Relations**: Infers `requires` and `related_to` edges from the main topic to sub-concepts.
+- **Insights View (`/insights/[entryId]`)**:
+  - Displays original reflection and self-reported rating.
+  - Color-coded concept badges (Green: understood/strong, Yellow: attempted/developing, Red: confused/weak, Gray: unknown/new).
+  - Diagnosed misconceptions with grounded evidence quotes from the student's writing.
+  - Metacognitive calibration comparison (Self-reported vs Inferred confidence) and gap explanation.
+  - Targeted next action with clear CTA linking to `/review`.
+
+---
+
+## 🧪 Short Testing Guide
+
+You can easily test the entire Phase 2 AI pipeline using the built-in test button or manual entry:
+
+### Step 1: Ensure Your Environment Variables are Configured
+In `.env.local`:
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+GEMINI_API_KEY=your-gemini-api-key
+```
+
+### Step 2: Open the Reflection Form
+1. Run `npm run dev` and navigate to [http://localhost:3000/journal/new](http://localhost:3000/journal/new).
+2. Click the **"Auto-fill Test Sample"** button in the header (or paste the sample below):
+   - **Subject**: `Computer Science`
+   - **Topic**: `Python Recursion`
+   - **Content**: 
+     > *"Today I studied Python recursion. I understand that a function calls itself, but I got confused about where to put the base case. I tried factorial and got an error."*
+   - **Confidence**: Set slider to `4 - Confident` (or `5 - Very confident`).
+
+### Step 3: Analyze Reflection
+1. Click **"Analyze Reflection"**.
+2. Notice the loading spinner state while Gemini processes the metacognitive analysis.
+3. You will be automatically redirected to `/insights/[entryId]`.
+
+### Expected Results on the Insights Page:
+- **Main Topic**: `Recursion` or `Python Recursion`
+- **Extracted Concepts**:
+  - `recursion`: Status `understood` (or `attempted`)
+  - `base case`: Status `confused` (Red badge)
+  - `factorial`: Status `attempted`
+- **Misconception**:
+  - Concept: `Base case`
+  - Evidence quote: mentions *"got confused about where to put the base case"* or *"tried factorial and got an error"*.
+- **Confidence Calibration**:
+  - Self-reported: `4 / 5`
+  - Inferred: `2 / 5`
+  - Gap: `Calibration Gap: Overconfident` (highlighted in amber)
+- **Targeted Next Action**:
+  - Recommends practicing where to position base cases to prevent recursion errors.
+- **CTA**: "Start Review" button linking to `/review`.
 ---
 
 ## 💡 What Cati SRL Demonstrates
