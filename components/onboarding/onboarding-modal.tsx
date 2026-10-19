@@ -54,6 +54,21 @@ export function OnboardingModal({
     }
   };
 
+  useEffect(() => {
+    if (!isVisible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleClose();
+      } else if (e.key === "ArrowRight") {
+        setStep((prev) => (prev < 3 ? prev + 1 : prev));
+      } else if (e.key === "ArrowLeft") {
+        setStep((prev) => (prev > 1 ? prev - 1 : prev));
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isVisible]);
+
   if (!isVisible) return null;
 
   const steps = [

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Sidebar } from "./sidebar";
 import { BottomNav } from "./bottom-nav";
 import { CatiLogo } from "./cati-logo";
+import { ToastProvider } from "@/components/ui/toast";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -20,7 +21,8 @@ export function AppShell({
   xp = 0,
 }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-[#0B0F17] text-slate-100 flex flex-col md:flex-row">
+    <ToastProvider>
+      <div className="min-h-screen bg-[#0B0F17] text-slate-100 flex flex-col md:flex-row">
       {/* Desktop Sidebar with Suspense boundary */}
       <Suspense
         fallback={
@@ -56,6 +58,7 @@ export function AppShell({
       <Suspense fallback={<div className="h-16 md:hidden" />}>
         <BottomNav />
       </Suspense>
-    </div>
+      </div>
+    </ToastProvider>
   );
 }

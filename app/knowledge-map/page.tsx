@@ -10,6 +10,9 @@ import {
   BookOpen,
   RotateCcw,
   AlertTriangle,
+  Search,
+  Filter,
+  Sparkles,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import {
@@ -51,6 +54,8 @@ export default function KnowledgeMapPage() {
   const [selectedConceptId, setSelectedConceptId] = useState<string | null>(
     null
   );
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "weak" | "due" | "strong">("all");
 
   useEffect(() => {
     async function loadKnowledgeMap() {
@@ -84,6 +89,42 @@ export default function KnowledgeMapPage() {
       concepts.find((c) => c.concept_id === selectedConceptId) || concepts[0]
     );
   }, [selectedConceptId, concepts]);
+
+  // Filtered concepts based on search and status
+  const [todayStr, setTodayStr] = useState<string>("");
+
+  useEffect(() => {
+    setTodayStr(new Date().toISOString().split("T")[0]);
+  }, []);
+
+  const counts = useMemo(() => {
+    let weak = 0;
+    let due = 0;
+    let strong = 0;
+    concepts.forEach((c) => {
+      if (c.mastery < 0.4) weak++;
+      if (c.mastery > 0.7) strong++;
+      if (c.review_due && c.review_due <= todayStr) due++;
+    });
+    return { all: concepts.length, weak, due, strong };
+  }, [concepts, todayStr]);
+
+  const filteredConcepts = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return concepts.filter((c) => {
+      if (q && !c.name.toLowerCase().includes(q) && !c.subject.toLowerCase().includes(q)) {
+        return false;
+      }
+      if (statusFilter === "weak") return c.mastery < 0.4;
+      if (statusFilter === "strong") return c.mastery > 0.7;
+      if (statusFilter === "due") return c.review_due ? c.review_due <= todayStr : false;
+      return true;
+    });
+  }, [concepts, searchQuery, statusFilter, todayStr]);
+
+  const filteredIdsSet = useMemo(() => {
+    return new Set(filteredConcepts.map((c) => c.concept_id));
+  }, [filteredConcepts]);
 
   // Compute Mastery Theme Colors
   const getMasteryColor = (mastery: number) => {
@@ -298,6 +339,81 @@ export default function KnowledgeMapPage() {
           </div>
         </div>
 
+        {/* Search & Filter Toolbar */}
+        {!loading && concepts.length > 0 && (
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900/50 p-3">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search concepts or subjects..."
+                className="w-full rounded-xl border border-slate-800 bg-slate-950/80 pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-white"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] text-slate-500 flex items-center gap-1 mr-1">
+                <Filter className="h-3 w-3" /> Filter:
+              </span>
+              <button
+                type="button"
+                onClick={() => setStatusFilter("all")}
+                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
+                  statusFilter === "all"
+                    ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
+                    : "bg-slate-950/60 text-slate-400 hover:text-white border border-slate-800"
+                }`}
+              >
+                All ({counts.all})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter("weak")}
+                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
+                  statusFilter === "weak"
+                    ? "bg-rose-600 text-white shadow-sm shadow-rose-600/30"
+                    : "bg-slate-950/60 text-slate-400 hover:text-white border border-slate-800"
+                }`}
+              >
+                Needs Review ({counts.weak})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter("due")}
+                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
+                  statusFilter === "due"
+                    ? "bg-amber-600 text-white shadow-sm shadow-amber-600/30"
+                    : "bg-slate-950/60 text-slate-400 hover:text-white border border-slate-800"
+                }`}
+              >
+                Due ({counts.due})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter("strong")}
+                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
+                  statusFilter === "strong"
+                    ? "bg-emerald-600 text-white shadow-sm shadow-emerald-600/30"
+                    : "bg-slate-950/60 text-slate-400 hover:text-white border border-slate-800"
+                }`}
+              >
+                Mastered ({counts.strong})
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Loading State */}
         {loading && (
           <Card className="border-slate-800 bg-slate-950/80 p-16 text-center">
@@ -441,15 +557,19 @@ export default function KnowledgeMapPage() {
                       const isSelected =
                         selectedConcept?.concept_id === concept.concept_id;
                       const pct = Math.round(concept.mastery * 100);
+                      const isFilteredOut =
+                        filteredConcepts.length < concepts.length &&
+                        !filteredIdsSet.has(concept.concept_id);
 
                       return (
                         <g
                           key={concept.id}
                           transform={`translate(${pos.x}, ${pos.y})`}
+                          opacity={isFilteredOut ? 0.25 : 1}
                           onClick={() =>
                             setSelectedConceptId(concept.concept_id)
                           }
-                          className="cursor-pointer group"
+                          className="cursor-pointer group transition-opacity duration-300"
                         >
                           {/* Selection indicator ring */}
                           {isSelected && (
@@ -522,54 +642,60 @@ export default function KnowledgeMapPage() {
                   <span>
                     Edges represent <strong>requires</strong> and <strong>related_to</strong> cognitive dependencies
                   </span>
-                  <span>{concepts.length} Concepts Tracked</span>
+                  <span>{filteredConcepts.length} of {concepts.length} Concepts Shown</span>
                 </div>
               </Card>
 
               {/* Accessible Node Grid under canvas for fast scanning */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {concepts.map((concept) => {
-                  const style = getMasteryColor(concept.mastery);
-                  const isSelected =
-                    selectedConcept?.concept_id === concept.concept_id;
+              {filteredConcepts.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {filteredConcepts.map((concept) => {
+                    const style = getMasteryColor(concept.mastery);
+                    const isSelected =
+                      selectedConcept?.concept_id === concept.concept_id;
 
-                  return (
-                    <button
-                      key={concept.id}
-                      onClick={() => setSelectedConceptId(concept.concept_id)}
-                      className={`text-left rounded-xl p-3 border transition-all duration-200 cursor-pointer ${
-                        isSelected
-                          ? `ring-2 ring-indigo-500 bg-slate-900 shadow-lg ${style.border}`
-                          : `bg-slate-900/60 hover:bg-slate-900/90 ${style.border} border-opacity-40`
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs font-semibold text-white truncate max-w-[140px]">
-                          {concept.name}
-                        </span>
-                        <span
-                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${style.badge}`}
-                        >
-                          {(concept.mastery * 100).toFixed(0)}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-slate-800 h-1 rounded-full overflow-hidden mb-1.5">
-                        <div
-                          className="h-full rounded-full transition-all"
-                          style={{
-                            width: `${concept.mastery * 100}%`,
-                            backgroundColor: style.hex,
-                          }}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between text-[10px] text-slate-400">
-                        <span className="capitalize">{concept.status}</span>
-                        <span>{concept.review_due ? `Due: ${concept.review_due}` : "No review due"}</span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+                    return (
+                      <button
+                        key={concept.id}
+                        onClick={() => setSelectedConceptId(concept.concept_id)}
+                        className={`text-left rounded-xl p-3 border transition-all duration-200 cursor-pointer ${
+                          isSelected
+                            ? `ring-2 ring-indigo-500 bg-slate-900 shadow-lg ${style.border}`
+                            : `bg-slate-900/60 hover:bg-slate-900/90 ${style.border} border-opacity-40`
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-xs font-semibold text-white truncate max-w-[140px]">
+                            {concept.name}
+                          </span>
+                          <span
+                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${style.badge}`}
+                          >
+                            {(concept.mastery * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-800 h-1 rounded-full overflow-hidden mb-1.5">
+                          <div
+                            className="h-full rounded-full transition-all"
+                            style={{
+                              width: `${concept.mastery * 100}%`,
+                              backgroundColor: style.hex,
+                            }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-slate-400">
+                          <span className="capitalize">{concept.status}</span>
+                          <span>{concept.review_due ? `Due: ${concept.review_due}` : "No review due"}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 text-center text-xs text-slate-400">
+                  No concepts match your filter criteria. Try resetting search or selecting &quot;All&quot;.
+                </div>
+              )}
             </div>
 
             {/* Node Inspector Side Panel (1 col) */}

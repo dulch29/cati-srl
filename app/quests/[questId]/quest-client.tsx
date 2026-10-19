@@ -28,6 +28,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 
 interface QuestTask {
   id: string;
@@ -55,6 +56,7 @@ interface CompletionResult {
 }
 
 export function QuestDetailClient({ questId }: { questId: string }) {
+  const { addToast } = useToast();
   const [quest, setQuest] = useState<QuestDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -106,11 +108,31 @@ export function QuestDetailClient({ questId }: { questId: string }) {
     if (quest?.status === "completed" && completionResult) return;
     setCompletedTaskIds((prev) => {
       const next = new Set(prev);
+      const isNowCompleted = !next.has(taskId);
       if (next.has(taskId)) {
         next.delete(taskId);
       } else {
         next.add(taskId);
       }
+
+      if (isNowCompleted) {
+        const total = quest?.tasks.length || 0;
+        const currentCount = next.size;
+        if (currentCount === total) {
+          addToast({
+            title: "All Steps Completed! 🎯",
+            description: "Ready to claim your reward and solidify mastery.",
+            type: "xp",
+          });
+        } else {
+          addToast({
+            title: "Step Completed",
+            description: `Progress: ${currentCount} of ${total} steps completed.`,
+            type: "success",
+          });
+        }
+      }
+
       return next;
     });
   };
@@ -136,12 +158,25 @@ export function QuestDetailClient({ questId }: { questId: string }) {
           currentStreak: json.currentStreak,
         });
         setQuest((prev) => (prev ? { ...prev, status: "completed" } : null));
+        addToast({
+          title: "Quest Mastered! 🎉",
+          description: `+${json.xpAwarded} XP awarded! Streak advanced to ${json.currentStreak} days.`,
+          type: "xp",
+        });
       } else {
-        alert(json.error || "Failed to complete quest.");
+        addToast({
+          title: "Quest Completion Failed",
+          description: json.error || "Could not finalize quest.",
+          type: "error",
+        });
       }
     } catch (err) {
       console.error("Complete quest error:", err);
-      alert("Error completing quest. Please try again.");
+      addToast({
+        title: "Connection Error",
+        description: "Please check your network and try again.",
+        type: "error",
+      });
     } finally {
       setIsSubmitting(false);
     }

@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/toast";
 
 interface ReviewQuestion {
   id: string;
@@ -54,6 +55,7 @@ interface EvaluationData {
 }
 
 export default function ReviewPage() {
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [questions, setQuestions] = useState<ReviewQuestion[]>([]);
@@ -146,6 +148,26 @@ export default function ReviewPage() {
       setEvaluation(evalData);
       setTotalXpEarned((prev) => prev + (evalData.xpAwarded || 0));
 
+      if (evalData.result === "correct") {
+        toast({
+          title: `+${evalData.xpAwarded || 15} XP • Correct!`,
+          message: "Great reasoning! Concept mastery increased.",
+          type: "xp",
+        });
+      } else if (evalData.result === "partially_correct") {
+        toast({
+          title: `+${evalData.xpAwarded || 8} XP • Partially Correct`,
+          message: "Good intuition, with room to sharpen edge cases.",
+          type: "info",
+        });
+      } else {
+        toast({
+          title: `+${evalData.xpAwarded || 3} XP • Keep Practicing`,
+          message: "Review the feedback below to cement this concept.",
+          type: "info",
+        });
+      }
+
       if (evalData.newTotalXp) {
         setUserProfile({
           xp: evalData.newTotalXp,
@@ -182,6 +204,11 @@ export default function ReviewPage() {
       setTotalXpEarned((prev) => prev + 10);
       setUserProfile((prev) => ({ ...prev, xp: prev.xp + 10 }));
       setIsCompleted(true);
+      toast({
+        title: "Adaptive Review Completed! (+10 Bonus XP)",
+        message: "Your Knowledge Map mastery and intervals have been recalibrated.",
+        type: "success",
+      });
     }
   };
 
@@ -350,9 +377,18 @@ export default function ReviewPage() {
                     placeholder="Type your explanation or solution here..."
                     value={studentAnswer}
                     onChange={(e) => setStudentAnswer(e.target.value)}
+                    onKeyDown={(e) => {
+                      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                        e.preventDefault();
+                        if (studentAnswer.trim() && !isEvaluating && !evaluation) {
+                          handleSubmitAnswer(e);
+                        }
+                      }
+                    }}
                     disabled={isEvaluating || !!evaluation}
                     rows={5}
                     required
+                    helperText={!evaluation ? "Tip: Press Ctrl+Enter to submit your explanation instantly." : undefined}
                   />
 
                   {!evaluation && (

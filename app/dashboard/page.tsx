@@ -169,10 +169,91 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Level Progression Banner */}
+        {(() => {
+          const xp = stats.xp;
+          const levelInfo =
+            xp < 150
+              ? {
+                  level: 1,
+                  title: "Metacognitive Novice",
+                  pct: Math.min(100, Math.round((xp / 150) * 100)),
+                  nextXp: 150,
+                  remaining: 150 - xp,
+                }
+              : xp < 300
+              ? {
+                  level: 2,
+                  title: "SRL Explorer",
+                  pct: Math.min(100, Math.round(((xp - 150) / 150) * 100)),
+                  nextXp: 300,
+                  remaining: 300 - xp,
+                }
+              : xp < 600
+              ? {
+                  level: 3,
+                  title: "Self-Regulated Scholar",
+                  pct: Math.min(100, Math.round(((xp - 300) / 300) * 100)),
+                  nextXp: 600,
+                  remaining: 600 - xp,
+                }
+              : {
+                  level: 4,
+                  title: "Master of Metacognition",
+                  pct: 100,
+                  nextXp: xp,
+                  remaining: 0,
+                };
+
+          return (
+            <Card className="glass-panel border-indigo-500/25 bg-gradient-to-r from-slate-900/90 via-indigo-950/20 to-slate-900/90 p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white font-bold text-base shadow-md shadow-indigo-500/20">
+                    L{levelInfo.level}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-white">
+                        Level {levelInfo.level}: {levelInfo.title}
+                      </span>
+                      <span className="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold text-indigo-300 uppercase tracking-wider">
+                        Rank Tier
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {levelInfo.remaining > 0
+                        ? `${levelInfo.remaining} XP until Level ${levelInfo.level + 1}`
+                        : "Maximum Metacognitive Rank Reached!"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex-1 max-w-xs space-y-1 sm:text-right">
+                  <div className="flex items-center justify-between sm:justify-end gap-2 text-xs">
+                    <span className="text-slate-400 font-mono">
+                      {stats.xp} / {levelInfo.nextXp} XP
+                    </span>
+                    <span className="font-bold text-indigo-300">
+                      {levelInfo.pct}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-indigo-500 via-violet-500 to-emerald-400 rounded-full transition-all duration-500"
+                      style={{ width: `${levelInfo.pct}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </Card>
+          );
+        })()}
+
         {/* 4-Stat Metric Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Current Streak */}
-          <Card className="p-4 border-slate-800/90 bg-gradient-to-br from-slate-900/90 to-slate-900/50">
+          <Card className="glass-panel glass-panel-hover p-4 border-slate-800/90 bg-gradient-to-br from-slate-900/90 to-slate-900/50 transition-all duration-300">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
                 Current Streak
@@ -193,7 +274,7 @@ export default function DashboardPage() {
           </Card>
 
           {/* Total XP */}
-          <Card className="p-4 border-slate-800/90 bg-gradient-to-br from-slate-900/90 to-slate-900/50">
+          <Card className="glass-panel glass-panel-hover p-4 border-slate-800/90 bg-gradient-to-br from-slate-900/90 to-slate-900/50 transition-all duration-300">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
                 Total XP
@@ -214,7 +295,7 @@ export default function DashboardPage() {
           </Card>
 
           {/* Reviews Due */}
-          <Card className="p-4 border-slate-800/90 bg-gradient-to-br from-slate-900/90 to-slate-900/50">
+          <Card className="glass-panel glass-panel-hover p-4 border-slate-800/90 bg-gradient-to-br from-slate-900/90 to-slate-900/50 transition-all duration-300">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
                 Reviews Due
@@ -238,7 +319,7 @@ export default function DashboardPage() {
           </Card>
 
           {/* Weak Concepts */}
-          <Card className="p-4 border-slate-800/90 bg-gradient-to-br from-slate-900/90 to-slate-900/50">
+          <Card className="glass-panel glass-panel-hover p-4 border-slate-800/90 bg-gradient-to-br from-slate-900/90 to-slate-900/50 transition-all duration-300">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
                 Weak Concepts
@@ -466,7 +547,7 @@ export default function DashboardPage() {
                           </strong>
                         </span>
                         <Link
-                          href={`/journal/${entry.id}/insights`}
+                          href={`/insights/${entry.id}`}
                           className="text-indigo-400 hover:text-indigo-300 font-medium inline-flex items-center gap-0.5"
                         >
                           Insights <ChevronRight className="h-3 w-3" />

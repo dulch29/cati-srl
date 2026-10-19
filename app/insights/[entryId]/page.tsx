@@ -305,7 +305,7 @@ export default async function InsightsPage({ params }: PageProps) {
         {analysis ? (
           <>
             {/* Metacognitive Calibration Card */}
-            <Card className="border-indigo-500/30 bg-gradient-to-br from-slate-900/90 to-indigo-950/20">
+            <Card className="glass-panel border-indigo-500/30 bg-gradient-to-br from-slate-900/90 via-slate-900/70 to-indigo-950/30 overflow-hidden shadow-xl shadow-indigo-950/20">
               <CardHeader>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span
@@ -314,34 +314,107 @@ export default async function InsightsPage({ params }: PageProps) {
                     <Scale className="h-3.5 w-3.5" />
                     {gapInfo?.title}
                   </span>
-                  <span className="text-xs text-slate-400">
-                    Metacognitive Calibration
+                  <span className="text-xs text-slate-400 font-mono">
+                    Calibration Delta:{" "}
+                    <strong
+                      className={
+                        analysis.confidence.self_reported - analysis.confidence.inferred > 0
+                          ? "text-amber-400"
+                          : analysis.confidence.self_reported - analysis.confidence.inferred < 0
+                          ? "text-indigo-400"
+                          : "text-emerald-400"
+                      }
+                    >
+                      {analysis.confidence.self_reported - analysis.confidence.inferred > 0
+                        ? `+${analysis.confidence.self_reported - analysis.confidence.inferred}`
+                        : analysis.confidence.self_reported - analysis.confidence.inferred}
+                    </strong>
                   </span>
                 </div>
                 <CardTitle className="text-lg text-white mt-2">
-                  Confidence Comparison
+                  Confidence vs. Demonstrated Evidence
                 </CardTitle>
-                <CardDescription className="text-slate-300">
+                <CardDescription className="text-slate-300 text-xs sm:text-sm leading-relaxed">
                   {gapInfo?.description}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4 rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-center">
-                  <div>
-                    <div className="text-3xl font-bold text-indigo-400">
-                      {analysis.confidence.self_reported} / 5
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Self-reported Meter */}
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-400 font-medium">
+                        Self-Reported Rating
+                      </span>
+                      <span className="text-xl font-bold text-indigo-400 font-mono">
+                        {analysis.confidence.self_reported}{" "}
+                        <span className="text-xs text-slate-500">/ 5</span>
+                      </span>
                     </div>
-                    <div className="text-xs text-slate-400 mt-1">
-                      Self-Reported Rating
+                    {/* Visual Segmented Meter */}
+                    <div className="grid grid-cols-5 gap-1.5 h-2">
+                      {[1, 2, 3, 4, 5].map((lvl) => (
+                        <div
+                          key={lvl}
+                          className={`h-full rounded-full transition-all duration-300 ${
+                            lvl <= analysis.confidence.self_reported
+                              ? "bg-gradient-to-r from-indigo-500 to-indigo-400 shadow-sm shadow-indigo-500/50"
+                              : "bg-slate-800"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex justify-between text-[10px] text-slate-500">
+                      <span>Low (1)</span>
+                      <span>High (5)</span>
                     </div>
                   </div>
+
+                  {/* Inferred Score Meter */}
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-400 font-medium">
+                        AI Inferred Evidence Score
+                      </span>
+                      <span
+                        className={`text-xl font-bold font-mono ${
+                          analysis.confidence.inferred < 3
+                            ? "text-amber-400"
+                            : "text-emerald-400"
+                        }`}
+                      >
+                        {analysis.confidence.inferred}{" "}
+                        <span className="text-xs text-slate-500">/ 5</span>
+                      </span>
+                    </div>
+                    {/* Visual Segmented Meter */}
+                    <div className="grid grid-cols-5 gap-1.5 h-2">
+                      {[1, 2, 3, 4, 5].map((lvl) => (
+                        <div
+                          key={lvl}
+                          className={`h-full rounded-full transition-all duration-300 ${
+                            lvl <= analysis.confidence.inferred
+                              ? analysis.confidence.inferred < 3
+                                ? "bg-gradient-to-r from-amber-500 to-amber-400 shadow-sm shadow-amber-500/50"
+                                : "bg-gradient-to-r from-emerald-500 to-emerald-400 shadow-sm shadow-emerald-500/50"
+                              : "bg-slate-800"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex justify-between text-[10px] text-slate-500">
+                      <span>Confused (1)</span>
+                      <span>Mastered (5)</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Grounding Explanation */}
+                <div className="rounded-xl border border-slate-800/80 bg-slate-900/40 p-3.5 flex items-start gap-2.5 text-xs text-slate-300">
+                  <Sparkles className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
                   <div>
-                    <div className="text-3xl font-bold text-amber-400">
-                      {analysis.confidence.inferred} / 5
-                    </div>
-                    <div className="text-xs text-slate-400 mt-1">
-                      Inferred Evidence Score
-                    </div>
+                    <span className="font-semibold text-white">Why this matters: </span>
+                    Metacognitive calibration prevents the &quot;illusion of competence&quot; where familiarity is mistaken for true recall mastery. Closing this gap produces the fastest learning retention gains.
                   </div>
                 </div>
               </CardContent>
