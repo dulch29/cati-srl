@@ -105,8 +105,8 @@ export function LuminousOrb({
 
     // Smooth snappy physics interpolation towards target gaze (ultra responsive)
     const loop = () => {
-      currentGazeX += (targetGazeX - currentGazeX) * 0.28;
-      currentGazeY += (targetGazeY - currentGazeY) * 0.28;
+      currentGazeX += (targetGazeX - currentGazeX) * 0.45;
+      currentGazeY += (targetGazeY - currentGazeY) * 0.45;
       setGaze({ x: currentGazeX, y: currentGazeY });
       animId = requestAnimationFrame(loop);
     };
@@ -159,7 +159,7 @@ export function LuminousOrb({
       onClick={handleClick}
       style={{
         transform: `perspective(600px) rotateX(${-gaze.y * (isHovered ? 26 : 18)}deg) rotateY(${gaze.x * (isHovered ? 26 : 18)}deg) scale(${isHovered ? 1.12 : 1})`,
-        transition: "transform 0.05s ease-out",
+        transition: "transform 0.02s ease-out",
       }}
       className={`relative flex items-center justify-center cursor-pointer select-none ${sizeClasses} ${className}`}
     >
