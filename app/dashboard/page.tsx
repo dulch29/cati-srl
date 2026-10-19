@@ -221,7 +221,7 @@ export default function DashboardPage() {
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-xl relative overflow-hidden flex flex-col justify-between h-40">
             <div>
               <div className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">
-                <Sparkles className="h-3.5 w-3.5 text-[#34D399]" />
+                <Sparkles className="h-3.5 w-3.5 text-blue-400" />
                 Calibration Ratio
               </div>
               <div className="mt-2 text-3xl font-extrabold text-white tracking-tight">
@@ -281,7 +281,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="h-6 w-6 rounded-md bg-white/5 border border-white/10 flex items-center justify-center">
-                  <span className="h-2 w-2 rounded-full bg-[#34D399]" />
+                  <span className="h-2 w-2 rounded-full bg-blue-400" />
                 </div>
                 <span className="text-xs font-semibold text-white tracking-wide">
                   Cati AI Assistant
@@ -616,7 +616,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-indigo-500 to-[#34D399] transition-all duration-500"
+                      className="h-full bg-gradient-to-r from-indigo-500 to-blue-400 transition-all duration-500"
                       style={{ width: `${questProgressPercent}%` }}
                     />
                   </div>
@@ -681,7 +681,7 @@ export default function DashboardPage() {
                     <span className="text-indigo-300 font-semibold">{entry.subject}</span>
                     <span>{new Date(entry.created_at).toLocaleDateString()}</span>
                   </div>
-                  <h4 className="text-sm font-semibold text-white group-hover:text-[#34D399] transition-colors line-clamp-1">
+                  <h4 className="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors line-clamp-1">
                     {entry.topic}
                   </h4>
                   <div className="mt-3 flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-white/5">

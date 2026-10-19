@@ -199,10 +199,10 @@ export function InteractiveLandingShowcase() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
-                <Brain className="h-4 w-4 text-emerald-400" />
+                <Brain className="h-4 w-4 text-blue-400" />
                 <span>COGNITIVE CORE</span>
               </div>
-              <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-mono text-emerald-300">
+              <span className="rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-0.5 text-[10px] font-mono text-blue-300">
                 ACTIVE INFERENCE
               </span>
             </div>
@@ -248,7 +248,7 @@ export function InteractiveLandingShowcase() {
             <div className="rounded-2xl border border-white/10 bg-[#0B0F19]/60 p-5 space-y-3">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-semibold text-white flex items-center gap-2">
-                  <Sliders className="h-4 w-4 text-emerald-400" />
+                  <Sliders className="h-4 w-4 text-blue-400" />
                   Metacognitive Calibration Axis
                 </span>
                 <span
@@ -257,7 +257,7 @@ export function InteractiveLandingShowcase() {
                       ? "border-amber-500/40 bg-amber-500/10 text-amber-300"
                       : active.delta < 0
                       ? "border-indigo-500/40 bg-indigo-500/10 text-indigo-300"
-                      : "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+                      : "border-blue-500/40 bg-blue-500/10 text-blue-300"
                   }`}
                 >
                   {active.delta > 0

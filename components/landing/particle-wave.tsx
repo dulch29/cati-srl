@@ -102,12 +102,15 @@ export function ParticleWave() {
         rip.radius += 5.5;
         rip.strength *= 0.985;
 
-        // Draw faint concentric ripple ring
+        // Draw crisp sapphire ripple ring
         ctx.beginPath();
         ctx.arc(rip.x, rip.y, rip.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(52, 211, 153, ${Math.max(0, (rip.strength / 55) * 0.25)})`;
-        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = `rgba(96, 165, 250, ${Math.max(0, (rip.strength / 55) * 0.65)})`;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = "#3b82f6";
+        ctx.shadowBlur = 12;
         ctx.stroke();
+        ctx.shadowBlur = 0;
 
         if (rip.radius > rip.maxRadius || rip.strength < 0.5) {
           ripples.splice(i, 1);
@@ -172,15 +175,15 @@ export function ParticleWave() {
           ctx.arc(x, y, baseRadius, 0, Math.PI * 2);
 
           // Interactive Color Modulation:
-          // Near mouse: glows with vibrant emerald/cyan highlights
+          // Near mouse: glows with vibrant sapphire & ice blue highlights
           if (isNearMouse && c % 3 === 0) {
-            ctx.fillStyle = `rgba(52, 211, 153, ${alpha})`;
+            ctx.fillStyle = `rgba(147, 197, 253, ${alpha})`; // ice highlight
           } else if (c % 7 === 0 && depthPercent > 0.4) {
-            ctx.fillStyle = `rgba(52, 211, 153, ${alpha * 0.9})`; // emerald accent
+            ctx.fillStyle = `rgba(59, 130, 246, ${alpha * 0.95})`; // royal sapphire
           } else if (c % 11 === 0 && depthPercent > 0.5) {
-            ctx.fillStyle = `rgba(163, 230, 53, ${alpha * 0.85})`; // lime spark
+            ctx.fillStyle = `rgba(96, 165, 250, ${alpha * 0.9})`; // sky azure
           } else if (c % 13 === 0 && depthPercent > 0.6) {
-            ctx.fillStyle = `rgba(96, 165, 250, ${alpha * 0.8})`; // soft cyan
+            ctx.fillStyle = `rgba(37, 99, 235, ${alpha * 0.85})`; // deep cobalt
           } else {
             ctx.fillStyle = `rgba(240, 244, 250, ${alpha})`;
           }

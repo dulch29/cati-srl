@@ -17,7 +17,7 @@ export function LuminousOrb({
 }: LuminousOrbProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isHovered, setIsHovered] = useState(false);
-  const [pointer, setPointer] = useState({ x: 0, y: 0 }); // -1 to 1 normalized
+  const [gaze, setGaze] = useState({ x: 0, y: 0 }); // -1 to 1 normalized tracking across window
   const [liquidPhase, setLiquidPhase] = useState(0);
   const [ripples, setRipples] = useState<Array<{ id: number; x: number; y: number }>>([]);
 
@@ -27,48 +27,105 @@ export function LuminousOrb({
     lg: "w-40 h-40",
   }[size];
 
+  // Deep Royal Blue & Sapphire Color Spectrum (No Neon)
   const colors = {
     thinking: {
-      core: "from-indigo-400 via-violet-500 to-purple-600",
-      liquid: "rgba(129, 140, 248, 0.45)",
-      liquidGlow: "rgba(167, 139, 250, 0.6)",
-      glow: "rgba(129, 140, 248, 0.4)",
-      ring: "border-indigo-400/40",
-      accent: "#818cf8",
+      core: "from-blue-600 via-indigo-600 to-slate-900",
+      liquid: "rgba(59, 130, 246, 0.45)",
+      liquidGlow: "rgba(96, 165, 250, 0.7)",
+      glow: "rgba(37, 99, 235, 0.5)",
+      bloom: "rgba(96, 165, 250, 0.8)",
+      ring: "border-blue-400/40",
+      accent: "#3b82f6",
+      pupil: "#60a5fa",
     },
     overconfident: {
-      core: "from-amber-300 via-amber-500 to-rose-500",
+      core: "from-amber-600 via-blue-700 to-slate-900",
       liquid: "rgba(245, 158, 11, 0.45)",
-      liquidGlow: "rgba(251, 113, 133, 0.6)",
-      glow: "rgba(245, 158, 11, 0.4)",
+      liquidGlow: "rgba(59, 130, 246, 0.65)",
+      glow: "rgba(217, 119, 6, 0.45)",
+      bloom: "rgba(251, 191, 36, 0.8)",
       ring: "border-amber-400/40",
       accent: "#f59e0b",
+      pupil: "#fbbf24",
     },
     mastered: {
-      core: "from-emerald-300 via-teal-400 to-emerald-600",
-      liquid: "rgba(52, 211, 153, 0.45)",
-      liquidGlow: "rgba(45, 212, 191, 0.6)",
-      glow: "rgba(16, 185, 129, 0.4)",
-      ring: "border-emerald-400/40",
-      accent: "#34d399",
+      core: "from-sky-400 via-blue-600 to-indigo-950",
+      liquid: "rgba(56, 189, 248, 0.5)",
+      liquidGlow: "rgba(147, 197, 253, 0.8)",
+      glow: "rgba(56, 189, 248, 0.5)",
+      bloom: "rgba(186, 230, 253, 0.9)",
+      ring: "border-sky-400/50",
+      accent: "#38bdf8",
+      pupil: "#bae6fd",
     },
     calibrated: {
-      core: "from-cyan-300 via-sky-500 to-indigo-600",
-      liquid: "rgba(56, 189, 248, 0.45)",
-      liquidGlow: "rgba(99, 102, 241, 0.6)",
-      glow: "rgba(99, 102, 241, 0.4)",
-      ring: "border-cyan-400/40",
-      accent: "#38bdf8",
+      core: "from-blue-500 via-blue-700 to-slate-950",
+      liquid: "rgba(37, 99, 235, 0.5)",
+      liquidGlow: "rgba(96, 165, 250, 0.75)",
+      glow: "rgba(37, 99, 235, 0.5)",
+      bloom: "rgba(147, 197, 253, 0.85)",
+      ring: "border-blue-400/40",
+      accent: "#60a5fa",
+      pupil: "#93c5fd",
     },
   }[state];
 
-  // Fluid physics animation loop
+  // 1. Global Window Cursor Tracking: Lens ALWAYS Stares at User's Cursor
+  useEffect(() => {
+    if (!interactive) return;
+
+    let targetGazeX = 0;
+    let targetGazeY = 0;
+    let currentGazeX = 0;
+    let currentGazeY = 0;
+    let animId: number;
+
+    const handleWindowMouseMove = (e: MouseEvent) => {
+      const el = containerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      const dx = e.clientX - centerX;
+      const dy = e.clientY - centerY;
+      const dist = Math.hypot(dx, dy);
+
+      // Maximum deflection within viewport
+      const maxDistance = Math.max(window.innerWidth, window.innerHeight) * 0.75;
+      const intensity = Math.min(1, dist / maxDistance);
+      const angle = Math.atan2(dy, dx);
+
+      targetGazeX = Math.cos(angle) * Math.pow(intensity, 0.75);
+      targetGazeY = Math.sin(angle) * Math.pow(intensity, 0.75);
+    };
+
+    window.addEventListener("mousemove", handleWindowMouseMove);
+
+    // Smooth spring physics interpolation towards target gaze
+    const loop = () => {
+      currentGazeX += (targetGazeX - currentGazeX) * 0.08;
+      currentGazeY += (targetGazeY - currentGazeY) * 0.08;
+      setGaze({ x: currentGazeX, y: currentGazeY });
+      animId = requestAnimationFrame(loop);
+    };
+
+    animId = requestAnimationFrame(loop);
+
+    return () => {
+      window.removeEventListener("mousemove", handleWindowMouseMove);
+      cancelAnimationFrame(animId);
+    };
+  }, [interactive]);
+
+  // 2. Liquid Phase Animation Loop
   useEffect(() => {
     let animId: number;
     let phase = 0;
 
     const loop = () => {
-      phase += isHovered ? 0.045 : 0.02;
+      phase += isHovered ? 0.05 : 0.02;
       setLiquidPhase(phase);
       animId = requestAnimationFrame(loop);
     };
@@ -76,23 +133,6 @@ export function LuminousOrb({
     animId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(animId);
   }, [isHovered]);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!interactive || !containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1; // -1 to 1
-    const y = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-    setPointer({ x, y });
-  };
-
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    setPointer({ x: 0, y: 0 });
-  };
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
@@ -103,10 +143,10 @@ export function LuminousOrb({
     setRipples((prev) => [...prev.slice(-3), { id, x, y }]);
     setTimeout(() => {
       setRipples((prev) => prev.filter((r) => r.id !== id));
-    }, 1000);
+    }, 1200);
   };
 
-  // Organic fluid morphing border radius calculations
+  // Organic liquid morphing border radius
   const p = liquidPhase;
   const radiusA = `${48 + Math.sin(p) * 14}% ${52 + Math.cos(p * 0.9) * 12}% ${54 + Math.sin(p * 1.3) * 10}% ${46 + Math.cos(p * 1.1) * 13}% / ${53 + Math.cos(p * 1.2) * 11}% ${47 + Math.sin(p * 0.8) * 13}% ${51 + Math.cos(p * 1.4) * 12}% ${49 + Math.sin(p * 1.1) * 10}%`;
   const radiusB = `${52 + Math.cos(p * 1.1) * 13}% ${48 + Math.sin(p * 1.2) * 14}% ${46 + Math.cos(p * 0.7) * 12}% ${54 + Math.sin(p * 1.4) * 11}% / ${47 + Math.sin(p * 0.9) * 12}% ${53 + Math.cos(p * 1.3) * 11}% ${49 + Math.sin(p * 1.2) * 13}% ${51 + Math.cos(p * 0.8) * 12}%`;
@@ -114,129 +154,125 @@ export function LuminousOrb({
   return (
     <div
       ref={containerRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       onClick={handleClick}
       style={{
-        transform: isHovered
-          ? `perspective(600px) rotateX(${-pointer.y * 18}deg) rotateY(${pointer.x * 18}deg) scale(1.06)`
-          : "perspective(600px) rotateX(0deg) rotateY(0deg) scale(1)",
-        transition: "transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)",
+        transform: `perspective(600px) rotateX(${-gaze.y * (isHovered ? 26 : 18)}deg) rotateY(${gaze.x * (isHovered ? 26 : 18)}deg) scale(${isHovered ? 1.12 : 1})`,
+        transition: "transform 0.18s cubic-bezier(0.16, 1, 0.3, 1)",
       }}
       className={`relative flex items-center justify-center cursor-pointer select-none ${sizeClasses} ${className}`}
     >
-      {/* Outer ambient breathing glow */}
+      {/* 1. Supernova Luminous Bloom on Hover */}
       <div
-        className="absolute inset-0 rounded-full blur-2xl transition-all duration-700 pointer-events-none"
+        className="absolute inset-[-12px] rounded-full blur-3xl transition-all duration-500 pointer-events-none"
         style={{
-          backgroundColor: colors.glow,
-          transform: isHovered ? "scale(1.35)" : "scale(1)",
-          opacity: isHovered ? 0.85 : 0.45,
+          backgroundColor: isHovered ? colors.bloom : colors.glow,
+          transform: isHovered ? "scale(1.5)" : "scale(1)",
+          opacity: isHovered ? 0.95 : 0.45,
+          boxShadow: isHovered
+            ? `0 0 60px ${colors.bloom}, 0 0 100px ${colors.glow}`
+            : "none",
         }}
       />
 
-      {/* Rotating geometric orbit ring */}
+      {/* 2. Rotating Sentient Orbit Rings */}
       <div
-        className={`absolute inset-[-6px] rounded-full border border-dashed ${colors.ring} pointer-events-none transition-all duration-700`}
+        className={`absolute inset-[-8px] rounded-full border border-dashed ${colors.ring} pointer-events-none transition-all duration-500`}
         style={{
-          animation: "spin 12s linear infinite",
-          transform: isHovered ? `scale(1.15) rotate(${pointer.x * 45}deg)` : "scale(1)",
-          opacity: isHovered ? 0.75 : 0.4,
+          animation: isHovered ? "spin 4s linear infinite" : "spin 14s linear infinite",
+          transform: `scale(${isHovered ? 1.2 : 1}) rotate(${gaze.x * 35}deg)`,
+          opacity: isHovered ? 0.85 : 0.35,
+          boxShadow: isHovered ? `0 0 15px ${colors.accent}` : "none",
         }}
       />
 
-      {/* Outer glass boundary capsule */}
+      {/* 3. Outer Glass Lens Capsule */}
       <div
-        className={`relative w-full h-full rounded-full bg-gradient-to-tr ${colors.core} p-0.5 shadow-2xl overflow-hidden transition-all duration-500`}
+        className={`relative w-full h-full rounded-full bg-gradient-to-tr ${colors.core} p-0.5 shadow-2xl overflow-hidden transition-all duration-500 border border-white/20`}
+        style={{
+          boxShadow: isHovered
+            ? `0 0 35px ${colors.accent}, inset 0 0 20px rgba(255,255,255,0.4)`
+            : "0 10px 30px rgba(0,0,0,0.6)",
+        }}
       >
-        {/* Specular glass highlight on rim */}
+        {/* Specular Glint on Top Rim */}
         <div className="absolute top-1 left-2 w-1/3 h-1/3 rounded-full bg-white/40 blur-[2px] pointer-events-none" />
 
-        {/* Deep caustic shadow reflection */}
-        <div className="absolute bottom-1 right-2 w-1/2 h-1/2 rounded-full bg-black/40 blur-[5px] pointer-events-none" />
+        {/* Deep Caustic Back Shadow */}
+        <div className="absolute bottom-1 right-2 w-1/2 h-1/2 rounded-full bg-black/50 blur-[5px] pointer-events-none" />
 
-        {/* Dynamic Specular Lens Flare tracking mouse */}
+        {/* Dynamic Specular Lens Flare ALWAYS Staring at Cursor */}
         <div
-          className="absolute w-12 h-12 rounded-full bg-white/40 blur-md pointer-events-none transition-transform duration-100 ease-out"
+          className="absolute w-14 h-14 rounded-full bg-white/60 blur-md pointer-events-none transition-all duration-100 ease-out"
           style={{
-            left: `calc(50% + ${pointer.x * 32}% - 24px)`,
-            top: `calc(50% + ${pointer.y * 32}% - 24px)`,
-            opacity: isHovered ? 0.9 : 0.2,
+            left: `calc(50% + ${gaze.x * 38}% - 28px)`,
+            top: `calc(50% + ${gaze.y * 38}% - 28px)`,
+            opacity: isHovered ? 1 : 0.45,
+            transform: isHovered ? "scale(1.3)" : "scale(1)",
           }}
         />
 
-        {/* Central Liquid Sphere Container */}
+        {/* 4. Inside the Lens: The Sentient Staring Pupil & Liquid Droplet Core */}
         <div className="relative w-full h-full rounded-full backdrop-blur-md flex items-center justify-center overflow-hidden">
-          {/* Liquid Viscous Layer 1: Primary Undulating Fluid Mass */}
+          {/* Layer A: Viscous Blue Fluid Mass Staring at Cursor */}
           <div
             className="absolute transition-all duration-300 ease-out"
             style={{
-              width: isHovered ? "78%" : "54%",
-              height: isHovered ? "78%" : "54%",
+              width: isHovered ? "80%" : "60%",
+              height: isHovered ? "80%" : "60%",
               borderRadius: radiusA,
-              background: `radial-gradient(circle at ${50 + pointer.x * 25}% ${50 + pointer.y * 25}%, rgba(255, 255, 255, 0.65) 0%, ${colors.liquidGlow} 40%, ${colors.liquid} 85%)`,
-              boxShadow: `0 0 25px ${colors.glow}, inset 0 0 15px rgba(255,255,255,0.4)`,
-              transform: isHovered
-                ? `translate(${pointer.x * 12}px, ${pointer.y * 12}px) scale(${1 + Math.sin(p * 2) * 0.06})`
-                : "translate(0px, 0px) scale(1)",
+              background: `radial-gradient(circle at ${50 + gaze.x * 30}% ${50 + gaze.y * 30}%, rgba(255, 255, 255, 0.9) 0%, ${colors.liquidGlow} 45%, ${colors.liquid} 85%)`,
+              boxShadow: `0 0 30px ${colors.glow}, inset 0 0 15px rgba(255,255,255,0.5)`,
+              transform: `translate(${gaze.x * (isHovered ? 16 : 10)}px, ${gaze.y * (isHovered ? 16 : 10)}px)`,
               filter: isHovered ? "blur(0.5px)" : "blur(1.5px)",
             }}
           />
 
-          {/* Liquid Viscous Layer 2: Secondary Organic Blob with counter-morphing */}
+          {/* Layer B: Counter-Rotating Fluid Distortion */}
           <div
             className="absolute transition-all duration-500 ease-out"
             style={{
-              width: isHovered ? "64%" : "44%",
-              height: isHovered ? "64%" : "44%",
+              width: isHovered ? "65%" : "48%",
+              height: isHovered ? "65%" : "48%",
               borderRadius: radiusB,
-              background: `radial-gradient(circle at ${40 - pointer.x * 20}% ${40 - pointer.y * 20}%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 50%, transparent 100%)`,
-              transform: isHovered
-                ? `translate(${pointer.x * 18}px, ${pointer.y * 18}px) rotate(${liquidPhase * 30}deg)`
-                : `rotate(${liquidPhase * 15}deg)`,
-              opacity: isHovered ? 0.8 : 0.4,
+              background: `radial-gradient(circle at ${45 - gaze.x * 25}% ${45 - gaze.y * 25}%, rgba(255, 255, 255, 0.8) 0%, rgba(96, 165, 250, 0.4) 50%, transparent 100%)`,
+              transform: `translate(${gaze.x * 12}px, ${gaze.y * 12}px) rotate(${liquidPhase * 25}deg)`,
+              opacity: isHovered ? 0.9 : 0.45,
             }}
           />
 
-          {/* Central Neural Shimmer: Liquid Droplet Core that responds to hover */}
+          {/* Layer C: Staring Lens Pupil / Core that Tracks the Eye of the User */}
           <div
-            className="relative rounded-full transition-all duration-300 pointer-events-none"
+            className="relative rounded-full transition-all duration-200 pointer-events-none flex items-center justify-center"
             style={{
-              width: isHovered ? "45%" : "50%",
-              height: isHovered ? "45%" : "50%",
+              width: isHovered ? "45%" : "38%",
+              height: isHovered ? "45%" : "38%",
               background: isHovered
-                ? `radial-gradient(circle at 35% 35%, #ffffff 0%, rgba(255,255,255,0.85) 30%, ${colors.accent} 85%)`
-                : "rgba(255, 255, 255, 0.25)",
+                ? `radial-gradient(circle at 35% 35%, #ffffff 0%, #93c5fd 40%, ${colors.accent} 100%)`
+                : `radial-gradient(circle at 40% 40%, #ffffff 0%, ${colors.pupil} 50%, ${colors.accent} 100%)`,
               borderRadius: isHovered ? radiusA : "9999px",
               boxShadow: isHovered
-                ? `0 0 20px #ffffff, 0 0 35px ${colors.accent}`
-                : "0 0 10px rgba(255,255,255,0.3)",
-              transform: isHovered
-                ? `translate(${pointer.x * 8}px, ${pointer.y * 8}px) scale(${1.05 + Math.cos(p * 3) * 0.05})`
-                : "scale(1)",
-              animation: isHovered ? "none" : "ping 3s cubic-bezier(0, 0, 0.2, 1) infinite",
-              opacity: isHovered ? 0.95 : 0.35,
-              filter: isHovered ? "none" : "blur(2px)",
+                ? `0 0 25px #ffffff, 0 0 45px ${colors.accent}`
+                : `0 0 15px ${colors.accent}`,
+              transform: `translate(${gaze.x * 14}px, ${gaze.y * 14}px)`,
+              filter: isHovered ? "none" : "blur(0.5px)",
             }}
           >
-            {/* Specular Liquid Drop Glint */}
-            {isHovered && (
-              <div
-                className="absolute w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_8px_#ffffff]"
-                style={{
-                  top: `calc(25% + ${pointer.y * 10}%)`,
-                  left: `calc(25% + ${pointer.x * 10}%)`,
-                }}
-              />
-            )}
+            {/* The Staring Pupil Highlight */}
+            <div
+              className="w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_10px_#ffffff] transition-all duration-100"
+              style={{
+                transform: `translate(${gaze.x * 4}px, ${gaze.y * 4}px) scale(${isHovered ? 1.4 : 1})`,
+              }}
+            />
           </div>
 
-          {/* Liquid Ripple Shockwaves on Click */}
+          {/* Click Concentric Shockwaves */}
           {ripples.map((ripple) => (
             <span
               key={ripple.id}
-              className="absolute rounded-full border border-white/60 pointer-events-none animate-ping"
+              className="absolute rounded-full border border-sky-300 pointer-events-none animate-ping"
               style={{
                 left: ripple.x - 20,
                 top: ripple.y - 20,
