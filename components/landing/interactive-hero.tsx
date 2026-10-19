@@ -12,8 +12,11 @@ import {
   ArrowRight,
   ShieldAlert,
   Sparkles,
+  Command,
+  Sliders,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LuminousOrb } from "@/components/ui/luminous-orb";
 
 interface CognitiveArchetype {
   id: "overconfident" | "underconfident" | "aligned";
@@ -25,9 +28,9 @@ interface CognitiveArchetype {
   selfConfidence: number;
   inferredConfidence: number;
   delta: number;
+  orbState: "overconfident" | "thinking" | "mastered" | "calibrated";
   quote: string;
   annotatedWord: string;
-  annotation: string;
   diagnosis: string;
   graphNode: {
     name: string;
@@ -47,26 +50,26 @@ interface CognitiveArchetype {
 const ARCHETYPES: CognitiveArchetype[] = [
   {
     id: "overconfident",
-    tag: "01 / Illusion of Competence",
-    title: "High Familiarity Masking Conceptual Breakdown",
+    tag: "Case 01",
+    title: "Illusion of Competence",
     student: "Alex Chen",
     subject: "Computer Science",
     topic: "Python Recursion & Base Cases",
     selfConfidence: 4,
     inferredConfidence: 2,
     delta: 2,
+    orbState: "overconfident",
     quote:
       "Today I studied Python recursion. I understand that a function calls itself, but I got confused about where to put the base case. I tried factorial and got an error.",
     annotatedWord: "confused about where to put the base case",
-    annotation: "Evidence contradicts self-rating: boundary condition missing",
     diagnosis:
-      "The student equates conceptual familiarity ('function calls itself') with implementation competence, yet the base-case guard was misplaced, triggering a runtime stack overflow.",
+      "Conceptual familiarity masked implementation failure: base case was omitted before recursive call, causing stack overflow.",
     graphNode: {
       name: "Base Case Guards",
       status: "Weak (< 0.4)",
       mastery: 20,
       color: "text-rose-400 bg-rose-500/10",
-      border: "border-rose-500/30",
+      border: "border-rose-500/40",
     },
     quest: {
       title: "Trace Call Stack Termination",
@@ -77,26 +80,26 @@ const ARCHETYPES: CognitiveArchetype[] = [
   },
   {
     id: "underconfident",
-    tag: "02 / Impostor Hesitation",
-    title: "Solid Operational Grasp Hampered by Hesitation",
+    tag: "Case 02",
+    title: "Impostor Hesitation",
     student: "Maya Lin",
     subject: "Data Structures",
     topic: "Binary Tree In-Order Traversal",
     selfConfidence: 2,
     inferredConfidence: 4,
     delta: -2,
+    orbState: "calibrated",
     quote:
       "I feel like I don't really get it. I traversed left, processed root, then traversed right with null guards, and it produced sorted values in O(n), but I felt unsure the whole time.",
     annotatedWord: "traversed left, processed root, then traversed right with null guards",
-    annotation: "Demonstrates correct recursive invariants & optimal complexity",
     diagnosis:
-      "The student implemented the exact canonical invariant with null guards and correct asymptotic cost, yet downgraded their self-assessment due to subjective anxiety.",
+      "Student demonstrated correct tree-depth invariant and optimal O(n) complexity. Self-efficacy was miscalibrated downward.",
     graphNode: {
       name: "In-Order Traversal",
       status: "Strong (> 0.7)",
-      mastery: 80,
+      mastery: 82,
       color: "text-emerald-400 bg-emerald-500/10",
-      border: "border-emerald-500/30",
+      border: "border-emerald-500/40",
     },
     quest: {
       title: "Articulate Structural Invariant",
@@ -107,26 +110,26 @@ const ARCHETYPES: CognitiveArchetype[] = [
   },
   {
     id: "aligned",
-    tag: "03 / Calibrated Equilibrium",
-    title: "Accurate Self-Appraisal of the Learning Frontier",
+    tag: "Case 03",
+    title: "Calibrated Equilibrium",
     student: "David K.",
     subject: "Algorithms",
     topic: "Dynamic Programming Memoization",
     selfConfidence: 3,
     inferredConfidence: 3,
     delta: 0,
+    orbState: "mastered",
     quote:
       "I successfully cached subproblems for Fibonacci using a memoization dictionary, but I don't know how to convert this top-down logic into an iterative 2D tabulation grid.",
     annotatedWord: "convert top-down logic into an iterative 2D tabulation grid",
-    annotation: "Accurate delineation of the current cognitive frontier",
     diagnosis:
-      "The student possesses exact metacognitive awareness: they have mastered top-down memoization and precisely pinpointed the state-transition barrier preventing bottom-up tabulation.",
+      "Exact metacognitive calibration: student identified the precise cognitive frontier between top-down cache and iterative tables.",
     graphNode: {
       name: "Top-Down Memoization",
       status: "Developing (0.5 to 0.7)",
       mastery: 65,
       color: "text-amber-400 bg-amber-500/10",
-      border: "border-amber-500/30",
+      border: "border-amber-500/40",
     },
     quest: {
       title: "1D Tabulation Transition",
@@ -145,40 +148,35 @@ export function InteractiveLandingShowcase() {
   const active = ARCHETYPES.find((a) => a.id === selectedId) || ARCHETYPES[0];
 
   return (
-    <div className="w-full max-w-4xl mx-auto rounded-2xl border border-slate-800 bg-[#0d121c] p-5 sm:p-7 shadow-2xl backdrop-blur-md relative overflow-hidden text-left">
-      {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-5 border-b border-slate-800/80">
-        <div>
-          <span className="text-[11px] font-mono uppercase text-indigo-400 tracking-wider">
-            Interactive Diagnostic Simulator
+    <div className="w-full max-w-5xl mx-auto rounded-3xl border border-white/10 bg-[#07090E]/95 shadow-[0_20px_70px_-15px_rgba(0,0,0,0.85)] backdrop-blur-2xl overflow-hidden text-left">
+      {/* Top Window Bar (AlignIQ / Dribbble style) */}
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/10 bg-[#0B0F17]/80">
+        <div className="flex items-center gap-2">
+          <div className="h-3 w-3 rounded-full bg-rose-500/80" />
+          <div className="h-3 w-3 rounded-full bg-amber-500/80" />
+          <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
+          <span className="ml-2 font-mono text-[11px] text-slate-400">
+            cati.diagnostic.engine &bull; v2.4
           </span>
-          <h2 className="text-base sm:text-lg font-semibold text-white tracking-tight mt-0.5">
-            Metacognitive Calibration in Action
-          </h2>
         </div>
-        <span className="text-xs text-slate-400 font-mono self-start sm:self-auto">
-          Select student mental state below:
-        </span>
-      </div>
 
-      {/* 3 Archetype Selector Tabs */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-4">
-        {ARCHETYPES.map((arch) => {
-          const isSelected = arch.id === selectedId;
-          return (
-            <button
-              key={arch.id}
-              onClick={() => setSelectedId(arch.id)}
-              className={`text-left p-3 rounded-xl border transition-all duration-150 cursor-pointer ${
-                isSelected
-                  ? "bg-slate-800/90 border-slate-600 shadow-md text-white"
-                  : "bg-slate-900/40 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-700"
-              }`}
-            >
-              <div className="flex items-center justify-between text-[11px] font-mono">
-                <span>{arch.tag}</span>
+        {/* 3 Interactive Case Toggles */}
+        <div className="flex items-center gap-1.5 bg-black/50 p-1 rounded-xl border border-white/5">
+          {ARCHETYPES.map((arch) => {
+            const isSelected = arch.id === selectedId;
+            return (
+              <button
+                key={arch.id}
+                onClick={() => setSelectedId(arch.id)}
+                className={`px-3 py-1 rounded-lg text-xs font-mono transition-all duration-200 cursor-pointer ${
+                  isSelected
+                    ? "bg-white/10 text-white font-semibold shadow-sm border border-white/15"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <span>{arch.tag}: {arch.title}</span>
                 <span
-                  className={`text-xs font-bold font-mono ${
+                  className={`ml-1.5 font-bold ${
                     arch.delta > 0
                       ? "text-amber-400"
                       : arch.delta < 0
@@ -186,162 +184,187 @@ export function InteractiveLandingShowcase() {
                       : "text-emerald-400"
                   }`}
                 >
-                  {arch.delta > 0 ? `+${arch.delta}` : arch.delta}
+                  ({arch.delta > 0 ? `+${arch.delta}` : arch.delta})
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Main Console Split View */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[460px]">
+        {/* Left Column: Cati Cognitive Core with Luminous Orb (AlignIQ inspiration) */}
+        <div className="lg:col-span-5 p-6 sm:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-white/10 bg-gradient-to-b from-[#0B0F19]/90 to-[#07090E]/90 relative">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+                <Brain className="h-4 w-4 text-emerald-400" />
+                <span>COGNITIVE CORE</span>
+              </div>
+              <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-mono text-emerald-300">
+                ACTIVE INFERENCE
+              </span>
+            </div>
+
+            {/* Central Luminous Orb Entity */}
+            <div className="flex flex-col items-center justify-center py-4">
+              <LuminousOrb state={active.orbState} size="lg" />
+              <h3 className="text-base font-bold text-white mt-4 tracking-tight">
+                Cati Metacognitive Lens
+              </h3>
+              <p className="text-xs text-slate-400 text-center max-w-xs mt-1">
+                Comparing self-appraisal with verbatim code and logic evidence.
+              </p>
+            </div>
+
+            {/* Reflection Excerpt Box */}
+            <div className="rounded-2xl border border-white/10 bg-black/60 p-4 space-y-2">
+              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
+                <span>{active.student}</span>
+                <span className="text-slate-500">{active.subject}</span>
+              </div>
+              <p className="font-mono text-xs text-slate-300 leading-relaxed">
+                &ldquo;
+                {active.quote.split(active.annotatedWord)[0]}
+                <span className="bg-amber-400/20 text-amber-200 px-1 py-0.5 rounded border-b border-amber-400 font-semibold">
+                  {active.annotatedWord}
+                </span>
+                {active.quote.split(active.annotatedWord)[1]}
+                &rdquo;
+              </p>
+            </div>
+          </div>
+
+          <div className="pt-4 text-[11px] text-slate-500 font-mono">
+            Grounding: Zimmerman Self-Regulated Learning (SRL)
+          </div>
+        </div>
+
+        {/* Right Column: Data & Graph Calibration Matrix */}
+        <div className="lg:col-span-7 p-6 sm:p-8 flex flex-col justify-between space-y-6 bg-[#06080D]">
+          <div className="space-y-5">
+            {/* Metacognitive Calibration Axis */}
+            <div className="rounded-2xl border border-white/10 bg-[#0B0F19]/60 p-5 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-white flex items-center gap-2">
+                  <Sliders className="h-4 w-4 text-emerald-400" />
+                  Metacognitive Calibration Axis
+                </span>
+                <span
+                  className={`font-mono text-xs px-2.5 py-0.5 rounded-full border ${
+                    active.delta > 0
+                      ? "border-amber-500/40 bg-amber-500/10 text-amber-300"
+                      : active.delta < 0
+                      ? "border-indigo-500/40 bg-indigo-500/10 text-indigo-300"
+                      : "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+                  }`}
+                >
+                  {active.delta > 0
+                    ? "Overconfidence (+2 Delta)"
+                    : active.delta < 0
+                    ? "Underconfidence (-2 Delta)"
+                    : "Accurate Calibration (0 Delta)"}
                 </span>
               </div>
-              <div className="text-xs font-semibold text-slate-200 mt-1 line-clamp-1">
-                {arch.topic}
+
+              {/* High-Precision Spectrum Gauge */}
+              <div className="relative w-full h-3 bg-slate-900 rounded-full border border-white/10 overflow-hidden flex items-center">
+                <div className="absolute inset-y-0 left-1/2 w-0.5 bg-white/40 -translate-x-1/2" />
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    active.delta > 0
+                      ? "w-2/3 ml-auto bg-gradient-to-r from-amber-500/40 to-amber-400"
+                      : active.delta < 0
+                      ? "w-2/3 mr-auto bg-gradient-to-r from-indigo-500 to-indigo-400/40"
+                      : "w-1/4 mx-auto bg-emerald-500"
+                  }`}
+                />
               </div>
-            </button>
-          );
-        })}
-      </div>
 
-      {/* Simulator Workspace */}
-      <div className="mt-5 space-y-4">
-        {/* Metacognitive Balance Beam */}
-        <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-          <div className="flex items-center justify-between text-xs mb-3">
-            <span className="text-slate-300 font-medium flex items-center gap-2">
-              <Brain className="h-4 w-4 text-indigo-400" />
-              Calibration Spectrum
-            </span>
-            <span
-              className={`font-mono text-xs px-2.5 py-0.5 rounded-full border ${
-                active.delta > 0
-                  ? "border-amber-500/40 bg-amber-500/10 text-amber-300"
-                  : active.delta < 0
-                  ? "border-indigo-500/40 bg-indigo-500/10 text-indigo-300"
-                  : "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
-              }`}
-            >
-              {active.delta > 0
-                ? "Overconfidence (+2 Gap)"
-                : active.delta < 0
-                ? "Underconfidence (-2 Gap)"
-                : "Calibrated (0 Delta)"}
-            </span>
+              <div className="flex justify-between text-[10px] font-mono text-slate-500">
+                <span>-2 (Underconfident)</span>
+                <span className="text-slate-300 font-semibold">0 (Calibrated)</span>
+                <span>+2 (Overconfident)</span>
+              </div>
+
+              {/* Diagnosis Output */}
+              <div className="pt-2 text-xs text-slate-300 leading-relaxed border-t border-white/5 flex items-start gap-2">
+                <ShieldAlert className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong className="text-white">Diagnosis:</strong> {active.diagnosis}
+                </span>
+              </div>
+            </div>
+
+            {/* Knowledge Node & Micro-Quest Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Knowledge Node Widget */}
+              <div className="rounded-2xl border border-white/10 bg-[#0B0F19]/60 p-4 space-y-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400 font-mono text-[11px] flex items-center gap-1.5">
+                    <Network className="h-3.5 w-3.5 text-indigo-400" />
+                    KNOWLEDGE NODE
+                  </span>
+                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${active.graphNode.color} ${active.graphNode.border}`}>
+                    {active.graphNode.status}
+                  </span>
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-white">{active.graphNode.name}</div>
+                  <div className="text-xs font-mono text-slate-400 mt-0.5">
+                    Live Mastery: <strong className="text-white">{active.graphNode.mastery}%</strong>
+                  </div>
+                </div>
+                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-500 ${
+                      active.graphNode.mastery < 40
+                        ? "bg-rose-500"
+                        : active.graphNode.mastery < 70
+                        ? "bg-amber-500"
+                        : "bg-emerald-500"
+                    }`}
+                    style={{ width: `${active.graphNode.mastery}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Micro-Quest Widget */}
+              <div className="rounded-2xl border border-white/10 bg-[#0B0F19]/60 p-4 space-y-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400 font-mono text-[11px] flex items-center gap-1.5">
+                    <Zap className="h-3.5 w-3.5 text-amber-400" />
+                    ADAPTIVE RECOVERY
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400 flex items-center gap-1">
+                    <Clock className="h-3 w-3" /> {active.quest.duration}
+                  </span>
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-white">{active.quest.title}</div>
+                  <p className="text-[11px] text-slate-400 leading-normal mt-0.5">{active.quest.action}</p>
+                </div>
+                <div className="flex items-center justify-between text-[11px] pt-1 border-t border-white/5">
+                  <span className="text-amber-400 font-mono font-semibold">{active.quest.reward}</span>
+                  <span className="text-indigo-300 font-mono">1-click launch</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Spectrum Bar */}
-          <div className="relative w-full h-3 bg-slate-900 rounded-full border border-slate-800 overflow-hidden flex items-center">
-            <div className="absolute inset-y-0 left-1/2 w-0.5 bg-slate-600 -translate-x-1/2" />
-            <div
-              className={`h-full rounded-full transition-all duration-300 ${
-                active.delta > 0
-                  ? "w-2/3 ml-auto bg-amber-500/40"
-                  : active.delta < 0
-                  ? "w-2/3 mr-auto bg-indigo-500/40"
-                  : "w-1/4 mx-auto bg-emerald-500/60"
-              }`}
-            />
-          </div>
-
-          <div className="flex justify-between text-[10px] font-mono text-slate-500 mt-2 px-1">
-            <span>-2 (Underconfident)</span>
-            <span className="text-slate-400 font-semibold">0 (Equilibrium)</span>
-            <span>+2 (Overconfident)</span>
+          {/* Action Row */}
+          <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <span className="text-xs text-slate-400 font-mono">
+              Ready to calibrate your own study reflections?
+            </span>
+            <Link href="/journal/new?sample=recursion">
+              <Button size="sm" className="bg-white text-black hover:bg-slate-200 font-semibold px-4 shadow-lg shadow-white/10">
+                Launch Interactive Demo
+              </Button>
+            </Link>
           </div>
         </div>
-
-        {/* Verbatim Reflection with Analytical Highlight */}
-        <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-400">
-            <span className="font-mono text-[11px] text-slate-500">
-              Student Reflection: {active.student} ({active.subject})
-            </span>
-            <span>
-              Self-Report: <strong className="text-white">{active.selfConfidence} / 5</strong> &bull; AI Evidence:{" "}
-              <strong
-                className={
-                  active.inferredConfidence < 3
-                    ? "text-amber-400"
-                    : active.inferredConfidence >= 4
-                    ? "text-emerald-400"
-                    : "text-slate-200"
-                }
-              >
-                {active.inferredConfidence} / 5
-              </strong>
-            </span>
-          </div>
-
-          <div className="p-3 rounded-lg bg-slate-900/90 border border-slate-800/80 font-mono text-xs text-slate-300 leading-relaxed">
-            &ldquo;
-            {active.quote.split(active.annotatedWord)[0]}
-            <mark className="bg-amber-400/20 text-amber-200 px-1 py-0.5 rounded border-b border-amber-400">
-              {active.annotatedWord}
-            </mark>
-            {active.quote.split(active.annotatedWord)[1]}
-            &rdquo;
-          </div>
-
-          <div className="flex items-start gap-2 pt-1 text-xs text-slate-400">
-            <ShieldAlert className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-            <p className="leading-relaxed text-slate-300">
-              <strong className="text-white">Cognitive Diagnostic:</strong> {active.diagnosis}
-            </p>
-          </div>
-        </div>
-
-        {/* Reactive Graph Node & Micro-Quest Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Knowledge Graph Reaction */}
-          <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-3.5 space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400 font-medium flex items-center gap-1.5">
-                <Network className="h-3.5 w-3.5 text-indigo-400" />
-                Knowledge Graph Calibration
-              </span>
-              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${active.graphNode.color} ${active.graphNode.border}`}>
-                {active.graphNode.status}
-              </span>
-            </div>
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-xs font-semibold text-white">{active.graphNode.name}</span>
-              <span className="text-xs font-mono font-bold text-slate-300">{active.graphNode.mastery}%</span>
-            </div>
-            <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-              <div
-                className={`h-full transition-all duration-300 ${
-                  active.graphNode.mastery < 40
-                    ? "bg-rose-500"
-                    : active.graphNode.mastery < 70
-                    ? "bg-amber-500"
-                    : "bg-emerald-500"
-                }`}
-                style={{ width: `${active.graphNode.mastery}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Prescribed Micro-Quest */}
-          <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-3.5 space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400 font-medium flex items-center gap-1.5">
-                <Zap className="h-3.5 w-3.5 text-amber-400" />
-                Prescribed Micro-Quest
-              </span>
-              <span className="text-[10px] font-mono text-slate-500 flex items-center gap-1">
-                <Clock className="h-3 w-3" /> {active.quest.duration}
-              </span>
-            </div>
-            <div className="text-xs font-semibold text-white">{active.quest.title}</div>
-            <p className="text-[11px] text-slate-400 leading-normal">{active.quest.action}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Simulator Bottom Actions */}
-      <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <span className="text-xs text-slate-400">
-          Grounded in Zimmerman&apos;s Self-Regulated Learning (SRL) cyclical phases.
-        </span>
-        <Link href="/journal/new?sample=recursion">
-          <Button size="sm">
-            Test Live With Your Reflection
-          </Button>
-        </Link>
       </div>
     </div>
   );

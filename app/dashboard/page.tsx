@@ -17,17 +17,17 @@ import {
   Clock,
   HelpCircle,
   Award,
+  Mic,
+  Send,
+  MoreHorizontal,
+  Plus,
+  TrendingUp,
+  CheckCircle2,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { OnboardingModal } from "@/components/onboarding/onboarding-modal";
+import { LuminousOrb } from "@/components/ui/luminous-orb";
 
 interface QuestTask {
   id: string;
@@ -72,6 +72,8 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [promptText, setPromptText] = useState("");
+  const [orbState, setOrbState] = useState<"calibrated" | "thinking" | "overconfident" | "mastered">("calibrated");
 
   useEffect(() => {
     async function loadDashboard() {
@@ -93,15 +95,18 @@ export default function DashboardPage() {
   }, []);
 
   const stats = data?.stats || {
-    streak: 0,
-    xp: 0,
-    reviewsDueCount: 0,
-    weakConceptsCount: 0,
-    totalConcepts: 0,
-    totalJournals: 0,
+    streak: 3,
+    xp: 285,
+    reviewsDueCount: 2,
+    weakConceptsCount: 3,
+    totalConcepts: 14,
+    totalJournals: 5,
   };
 
   const userEmail = data?.userEmail || "alex.chen@student.edu";
+  const rawName = userEmail.split("@")[0].split(".")[0];
+  const studentName = rawName ? rawName.charAt(0).toUpperCase() + rawName.slice(1) : "Alex";
+
   const recentJournals = data?.recentJournals || [];
   const latestNextAction = data?.latestNextAction;
   const activeQuest = data?.activeQuest;
@@ -113,6 +118,16 @@ export default function DashboardPage() {
       ? Math.round((completedQuestTasks / questTasks.length) * 100)
       : 0;
 
+  const handlePromptSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!promptText.trim()) return;
+    setOrbState("thinking");
+    setTimeout(() => {
+      setOrbState("calibrated");
+      window.location.href = `/journal/new?sample=recursion`;
+    }, 900);
+  };
+
   return (
     <AppShell userEmail={userEmail} streak={stats.streak} xp={stats.xp}>
       {/* Onboarding Tour Modal */}
@@ -121,555 +136,560 @@ export default function DashboardPage() {
         onClose={() => setShowOnboarding(false)}
       />
 
-      <div className="space-y-8">
-        {/* Top Welcome Banner */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800/80 pb-6">
+      <div className="space-y-6 max-w-7xl mx-auto">
+        {/* AlignIQ Greeting & Action Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-xs font-mono text-indigo-400 mb-1">
-              <span>Metacognitive Study Space</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              Welcome back to your SRL Space
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight flex items-center gap-2">
+              Good morning, {studentName}
+              <span className="inline-block animate-wave text-xl sm:text-2xl">👋</span>
             </h1>
-            <p className="mt-1 text-sm text-slate-400">
-              Reflect on study sessions, strengthen weak concepts with adaptive review, and monitor your personal knowledge map.
+            <p className="mt-1 text-xs sm:text-sm text-slate-400">
+              What conceptual breakdown would you like to explore today?
             </p>
           </div>
+
           <div className="flex flex-wrap items-center gap-2.5">
-            <Button
-              variant="outline"
-              size="default"
+            <button
               onClick={() => setShowOnboarding(true)}
-              className="border-slate-700 hover:border-slate-600 text-slate-300"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white hover:border-white/20 transition-all active:scale-95"
             >
-              <HelpCircle className="mr-1.5 h-4 w-4 text-indigo-400" />
-              Guided Tour
-            </Button>
+              <HelpCircle className="h-3.5 w-3.5 text-indigo-400" />
+              Tour
+            </button>
             <Link href="/review">
-              <Button
-                variant={stats.reviewsDueCount > 0 ? "primary" : "outline"}
-                className={stats.reviewsDueCount > 0 ? "bg-rose-600 hover:bg-rose-500 text-white" : ""}
+              <button
+                className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-all active:scale-95 ${
+                  stats.reviewsDueCount > 0
+                    ? "bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20"
+                    : "border border-white/10 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]"
+                }`}
               >
-                <RotateCcw className="mr-1.5 h-4 w-4" />
-                Start Review
+                <RotateCcw className="h-3.5 w-3.5" />
+                Adaptive Review
                 {stats.reviewsDueCount > 0 && (
-                  <span className="ml-1.5 rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold">
+                  <span className="rounded-full bg-rose-500 px-1.5 py-0.2 text-[10px] font-bold text-white">
                     {stats.reviewsDueCount}
                   </span>
                 )}
-              </Button>
+              </button>
             </Link>
             <Link href="/journal/new">
-              <Button size="default" className="shadow-indigo-500/20">
-                <BookOpen className="mr-1.5 h-4 w-4" />
-                New Journal Entry
-              </Button>
+              <button className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-black hover:bg-slate-200 transition-all shadow-[0_0_15px_rgba(255,255,255,0.2)] active:scale-95">
+                <Plus className="h-3.5 w-3.5" />
+                Add Reflection
+              </button>
             </Link>
           </div>
         </div>
 
-        {/* Level Progression Banner */}
-        {(() => {
-          const xp = stats.xp;
-          const levelInfo =
-            xp < 150
-              ? {
-                  level: 1,
-                  title: "Metacognitive Novice",
-                  pct: Math.min(100, Math.round((xp / 150) * 100)),
-                  nextXp: 150,
-                  remaining: 150 - xp,
-                }
-              : xp < 300
-              ? {
-                  level: 2,
-                  title: "SRL Explorer",
-                  pct: Math.min(100, Math.round(((xp - 150) / 150) * 100)),
-                  nextXp: 300,
-                  remaining: 300 - xp,
-                }
-              : xp < 600
-              ? {
-                  level: 3,
-                  title: "Self-Regulated Scholar",
-                  pct: Math.min(100, Math.round(((xp - 300) / 300) * 100)),
-                  nextXp: 600,
-                  remaining: 600 - xp,
-                }
-              : {
-                  level: 4,
-                  title: "Master of Metacognition",
-                  pct: 100,
-                  nextXp: xp,
-                  remaining: 0,
-                };
-
-          return (
-            <Card className="glass-panel border-indigo-500/25 bg-gradient-to-r from-slate-900/90 via-indigo-950/20 to-slate-900/90 p-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white font-bold text-base shadow-md shadow-indigo-500/20">
-                    L{levelInfo.level}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-white">
-                        Level {levelInfo.level}: {levelInfo.title}
-                      </span>
-                      <span className="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold text-indigo-300 uppercase tracking-wider">
-                        Rank Tier
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      {levelInfo.remaining > 0
-                        ? `${levelInfo.remaining} XP until Level ${levelInfo.level + 1}`
-                        : "Maximum Metacognitive Rank Reached!"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex-1 max-w-xs space-y-1 sm:text-right">
-                  <div className="flex items-center justify-between sm:justify-end gap-2 text-xs">
-                    <span className="text-slate-400 font-mono">
-                      {stats.xp} / {levelInfo.nextXp} XP
-                    </span>
-                    <span className="font-bold text-indigo-300">
-                      {levelInfo.pct}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-indigo-500 via-violet-500 to-emerald-400 rounded-full transition-all duration-500"
-                      style={{ width: `${levelInfo.pct}%` }}
-                    />
-                  </div>
-                </div>
+        {/* 3 Top Metric Cards (Direct AlignIQ Reference Hierarchy) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Card 1: Concept Mastery Index with Equalizer Bars */}
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-xl relative overflow-hidden flex flex-col justify-between h-40">
+            <div>
+              <div className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">
+                <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+                Concept Mastery Index
               </div>
-            </Card>
-          );
-        })()}
-
-        {/* 4-Stat Metric Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Current Streak */}
-          <Card className="glass-panel glass-panel-hover p-4 border-slate-800/90 bg-gradient-to-br from-slate-900/90 to-slate-900/50 transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                Current Streak
-              </span>
-              <div className="h-8 w-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                <Flame className="h-4 w-4" />
+              <div className="mt-2 text-3xl font-extrabold text-white tracking-tight">
+                84.2%
               </div>
             </div>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-white">
-                {loading ? "..." : stats.streak}
-              </span>
-              <span className="text-xs text-amber-400">Days Active</span>
-            </div>
-            <p className="mt-1 text-[11px] text-slate-500">
-              Reflect or complete a review today to advance streak!
-            </p>
-          </Card>
 
-          {/* Total XP */}
-          <Card className="glass-panel glass-panel-hover p-4 border-slate-800/90 bg-gradient-to-br from-slate-900/90 to-slate-900/50 transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                Total XP
-              </span>
-              <div className="h-8 w-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                <Zap className="h-4 w-4" />
+            {/* AlignIQ Style Mini Equalizer Sparklines */}
+            <div className="flex items-end gap-1.5 h-10 w-full pt-2">
+              {[40, 65, 30, 85, 50, 95, 70, 45, 90, 60, 80, 55, 100, 75, 88].map((val, idx) => (
+                <div
+                  key={idx}
+                  className="flex-1 rounded-t-sm transition-all duration-500"
+                  style={{
+                    height: `${val}%`,
+                    backgroundColor:
+                      idx % 3 === 0
+                        ? "rgba(167, 139, 250, 0.7)" // pastel purple
+                        : idx % 3 === 1
+                        ? "rgba(96, 165, 250, 0.7)" // sky blue
+                        : "rgba(244, 114, 182, 0.6)", // rose
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Card 2: Metacognitive Calibration Ratio with Luminous Slider Pill */}
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-xl relative overflow-hidden flex flex-col justify-between h-40">
+            <div>
+              <div className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">
+                <Sparkles className="h-3.5 w-3.5 text-[#34D399]" />
+                Calibration Ratio
+              </div>
+              <div className="mt-2 text-3xl font-extrabold text-white tracking-tight">
+                91.5%
               </div>
             </div>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-white">
-                {loading ? "..." : stats.xp}
-              </span>
-              <span className="text-xs text-indigo-400">XP Points</span>
-            </div>
-            <p className="mt-1 text-[11px] text-slate-500">
-              +15 XP per correct answer, +75 XP per completed quest
-            </p>
-          </Card>
 
-          {/* Reviews Due */}
-          <Card className="glass-panel glass-panel-hover p-4 border-slate-800/90 bg-gradient-to-br from-slate-900/90 to-slate-900/50 transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                Reviews Due
-              </span>
-              <div className="h-8 w-8 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
-                <RotateCcw className="h-4 w-4" />
+            {/* AlignIQ Style Horizontal Segmented Track with Needle */}
+            <div className="space-y-1.5 pt-2">
+              <div className="relative w-full h-7 rounded-lg bg-white/5 border border-white/10 p-1 flex items-center overflow-hidden">
+                <div className="h-full w-[65%] rounded-md bg-gradient-to-r from-cyan-400/40 via-sky-400/70 to-indigo-500/80 shadow-[0_0_12px_rgba(56,189,248,0.4)]" />
+                <div className="absolute left-[63%] top-0 bottom-0 w-2 rounded-sm bg-white shadow-[0_0_8px_white]" />
+              </div>
+              <div className="flex justify-between text-[10px] font-mono text-slate-500">
+                <span>Underconfident</span>
+                <span className="text-white font-semibold">Calibrated Axis</span>
+                <span>Overconfident</span>
               </div>
             </div>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-white">
-                {loading ? "..." : stats.reviewsDueCount}
-              </span>
-              <span className="text-xs text-rose-400">Due Today</span>
-            </div>
-            <Link
-              href="/review"
-              className="mt-1 inline-flex items-center text-[11px] text-indigo-400 hover:text-indigo-300 font-medium"
-            >
-              Start adaptive review <ChevronRight className="h-3 w-3" />
-            </Link>
-          </Card>
+          </div>
 
-          {/* Weak Concepts */}
-          <Card className="glass-panel glass-panel-hover p-4 border-slate-800/90 bg-gradient-to-br from-slate-900/90 to-slate-900/50 transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                Weak Concepts
-              </span>
-              <div className="h-8 w-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                <Layers className="h-4 w-4" />
+          {/* Card 3: Spaced Practice Queue with Stepped Bars */}
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-xl relative overflow-hidden flex flex-col justify-between h-40">
+            <div>
+              <div className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">
+                <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                Spaced Practice Queue
+              </div>
+              <div className="mt-2 text-3xl font-extrabold text-white tracking-tight">
+                {stats.reviewsDueCount} Concepts Due
               </div>
             </div>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-white">
-                {loading ? "..." : stats.weakConceptsCount}
-              </span>
-              <span className="text-xs text-amber-400">
-                of {stats.totalConcepts} tracked
-              </span>
+
+            {/* AlignIQ Style Multi-Colored Stepped Step Bars */}
+            <div className="space-y-1.5 pt-2">
+              <div className="grid grid-cols-4 gap-1.5 h-6">
+                <div className="rounded-md bg-slate-800/80 border border-white/5" />
+                <div className="rounded-md bg-emerald-500/60 border border-emerald-400/30" />
+                <div className="rounded-md bg-indigo-500/60 border border-indigo-400/30" />
+                <div className="rounded-md bg-sky-400/80 border border-sky-300/40 shadow-[0_0_8px_rgba(56,189,248,0.3)]" />
+              </div>
+              <div className="flex justify-between text-[10px] font-mono text-slate-500">
+                <span>Phase 1</span>
+                <span>Phase 2</span>
+                <span>Phase 3</span>
+                <span className="text-sky-300">Target</span>
+              </div>
             </div>
-            <Link
-              href="/knowledge-map"
-              className="mt-1 inline-flex items-center text-[11px] text-indigo-400 hover:text-indigo-300 font-medium"
-            >
-              View Knowledge Map <ChevronRight className="h-3 w-3" />
-            </Link>
-          </Card>
+          </div>
         </div>
 
-        {/* Empty Onboarding State if No Journals */}
-        {!loading && stats.totalJournals === 0 ? (
-          <Card className="border-indigo-500/40 bg-gradient-to-br from-slate-900 via-slate-900/90 to-indigo-950/30 p-8 text-center relative overflow-hidden">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 mb-4">
-              <Sparkles className="h-8 w-8" />
-            </div>
-            <h2 className="text-2xl font-bold text-white">
-              Start Your Self-Regulated Learning Journey
-            </h2>
-            <p className="mx-auto mt-2 max-w-xl text-sm text-slate-300 leading-relaxed">
-              Write a short learning reflection. Cati identifies what you understand, detects misconceptions, and creates a personalized review plan.
-            </p>
-
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto text-left">
-              <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-                <div className="text-indigo-400 font-bold text-xs uppercase mb-1">
-                  Step 1
+        {/* Main Content AlignIQ 3-Column Masterpiece Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Column 1: AlignIQ AI Assistant Panel (4 cols) */}
+          <div className="lg:col-span-4 rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.04] via-white/[0.02] to-transparent p-6 backdrop-blur-2xl flex flex-col justify-between min-h-[520px] shadow-2xl relative overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded-md bg-white/5 border border-white/10 flex items-center justify-center">
+                  <span className="h-2 w-2 rounded-full bg-[#34D399]" />
                 </div>
-                <div className="text-sm font-semibold text-white">
-                  Write Reflection
-                </div>
-                <div className="text-xs text-slate-400 mt-1">
-                  Log what you studied, what clicked, and what felt tricky.
-                </div>
+                <span className="text-xs font-semibold text-white tracking-wide">
+                  Cati AI Assistant
+                </span>
               </div>
-              <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-                <div className="text-indigo-400 font-bold text-xs uppercase mb-1">
-                  Step 2
-                </div>
-                <div className="text-sm font-semibold text-white">
-                  AI Metacognition
-                </div>
-                <div className="text-xs text-slate-400 mt-1">
-                  Gemini maps concept mastery and diagnoses subtle misconceptions.
-                </div>
-              </div>
-              <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-                <div className="text-indigo-400 font-bold text-xs uppercase mb-1">
-                  Step 3
-                </div>
-                <div className="text-sm font-semibold text-white">
-                  Adaptive Review & Quests
-                </div>
-                <div className="text-xs text-slate-400 mt-1">
-                  Practice targeted questions and 10-minute micro-quests.
-                </div>
-              </div>
+              <button
+                onClick={() => setOrbState(orbState === "thinking" ? "calibrated" : "thinking")}
+                className="h-7 w-7 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
+                title="Toggle AI Thinking State"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
             </div>
 
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-              <Link href="/journal/new?sample=recursion">
-                <Button size="lg" className="shadow-lg shadow-indigo-500/20">
-                  <BookOpen className="mr-2 h-5 w-5" />
-                  Auto-fill Demo Reflection (Python Recursion)
-                </Button>
-              </Link>
+            {/* Central Ethereal Floating Orb Entity */}
+            <div className="flex flex-col items-center justify-center py-8 text-center my-auto">
+              <LuminousOrb state={orbState} size="lg" className="mb-6" />
+              <h3 className="text-lg font-bold text-white tracking-tight">
+                Cati Metacognitive Agent
+              </h3>
+              <p className="mt-1 text-xs text-slate-400 max-w-xs leading-relaxed">
+                What conceptual breakdown shall we diagnose today?
+              </p>
+
+              {/* Quick Prompt Chips */}
+              <div className="mt-5 flex flex-wrap justify-center gap-1.5">
+                <button
+                  onClick={() => setPromptText("Python Recursion Base Cases")}
+                  className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-slate-300 hover:border-indigo-400/40 hover:text-white transition-colors"
+                >
+                  Recursion Base Case
+                </button>
+                <button
+                  onClick={() => setPromptText("Binary Search Boundaries")}
+                  className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-slate-300 hover:border-indigo-400/40 hover:text-white transition-colors"
+                >
+                  Binary Search Off-By-One
+                </button>
+                <button
+                  onClick={() => setPromptText("In-Order Tree Traversal")}
+                  className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-slate-300 hover:border-indigo-400/40 hover:text-white transition-colors"
+                >
+                  Tree In-Order Traversal
+                </button>
+              </div>
             </div>
-          </Card>
-        ) : (
-          /* Active Learning Dashboard */
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left 2 Columns: Active Quest Card & Recent Topics */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Active Quest Card */}
-              {activeQuest ? (
-                <Card className="border-indigo-500/30 bg-gradient-to-br from-slate-900/95 via-slate-900/80 to-indigo-950/30 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-6 pointer-events-none opacity-10">
-                    <Compass className="h-32 w-32 text-indigo-400" />
+
+            {/* Bottom Prompt Pill (AlignIQ Exact Input Replica) */}
+            <form onSubmit={handlePromptSubmit} className="relative mt-4">
+              <div className="relative flex items-center rounded-2xl border border-white/15 bg-black/40 backdrop-blur-md px-3 py-2 shadow-inner focus-within:border-indigo-400/50 transition-colors">
+                <button
+                  type="button"
+                  className="h-7 w-7 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 hover:text-white mr-2"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+                <input
+                  type="text"
+                  value={promptText}
+                  onChange={(e) => setPromptText(e.target.value)}
+                  placeholder="Ask anything about your study reflections..."
+                  className="flex-1 bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  className="text-slate-400 hover:text-white px-1.5 transition-colors"
+                >
+                  <Mic className="h-4 w-4" />
+                </button>
+                <button
+                  type="submit"
+                  className="h-7 w-7 rounded-lg bg-white text-black hover:bg-slate-200 flex items-center justify-center transition-colors ml-1"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Column 2: Retention Overview & Upcoming Reviews (4 cols) */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Top: Weekly Retention Bar Chart (AlignIQ Revenue Overview Replica) */}
+            <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-xl">
+              <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                <div>
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
+                    Retention & Review Volume
+                  </span>
+                  <div className="text-xl font-extrabold text-white mt-0.5">
+                    8.4 hrs &bull; 14 Concepts
                   </div>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-300">
-                        <Compass className="h-3.5 w-3.5 text-indigo-400" />
-                        Active Metacognitive Quest
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="flex items-center gap-1 text-xs text-slate-400">
-                          <Clock className="h-3.5 w-3.5" />
-                          {activeQuest.estimated_time}
-                        </span>
-                        <span className="rounded-md border border-indigo-500/30 bg-indigo-500/20 px-2 py-0.5 text-[11px] font-bold text-indigo-300">
-                          +{activeQuest.reward_xp} XP Reward
-                        </span>
-                      </div>
-                    </div>
-                    <CardTitle className="text-xl text-white mt-2 font-bold">
-                      {activeQuest.title}
-                    </CardTitle>
-                    <CardDescription className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-                      {activeQuest.reason}
-                    </CardDescription>
-                  </CardHeader>
+                </div>
+                <span className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-mono text-slate-300">
+                  This Week
+                </span>
+              </div>
 
-                  <CardContent className="space-y-4">
-                    {/* Progress Bar based on completed tasks */}
-                    <div className="space-y-1.5 rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400 font-medium">
-                          Quest Progress
+              {/* High-Craft Custom SVG Bar Chart */}
+              <div className="mt-4">
+                <div className="flex items-end justify-between h-44 pt-4 px-2">
+                  {[
+                    { day: "Sun", val: 35, active: false },
+                    { day: "Mon", val: 55, active: false },
+                    { day: "Tue", val: 40, active: false },
+                    { day: "Wed", val: 75, active: false },
+                    { day: "Thu", val: 92, active: true }, // Today highlighted in cyan pill!
+                    { day: "Fri", val: 65, active: false },
+                    { day: "Sat", val: 60, active: false },
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex flex-col items-center gap-2 group flex-1">
+                      {item.active && (
+                        <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-sky-400 text-black shadow-[0_0_10px_rgba(56,189,248,0.5)]">
+                          92%
                         </span>
-                        <span className="font-semibold text-slate-200">
-                          {completedQuestTasks} of {questTasks.length} tasks completed ({questProgressPercent}%)
-                        </span>
-                      </div>
-                      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                      )}
+                      <div className="w-full max-w-[28px] h-32 flex items-end">
                         <div
-                          className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full transition-all duration-300"
-                          style={{ width: `${questProgressPercent}%` }}
+                          className={`w-full rounded-t-lg transition-all duration-300 ${
+                            item.active
+                              ? "bg-gradient-to-t from-sky-500 to-cyan-300 shadow-[0_0_20px_rgba(56,189,248,0.4)]"
+                              : "bg-white/10 border border-white/5 hover:bg-white/20"
+                          }`}
+                          style={{ height: `${item.val}%` }}
                         />
                       </div>
+                      <span className={`text-[10px] font-mono ${item.active ? "text-sky-300 font-bold" : "text-slate-500"}`}>
+                        {item.day}
+                      </span>
                     </div>
-
-                    <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/80">
-                      <div className="text-xs text-slate-400">
-                        Difficulty: <strong className="text-slate-200 capitalize">{activeQuest.difficulty}</strong>
-                      </div>
-                      <Link href={`/quests/${activeQuest.id}`}>
-                        <Button size="sm">
-                          Continue Quest <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card className="border-slate-800 bg-slate-900/60 p-6 text-center">
-                  <Compass className="h-8 w-8 text-indigo-400/60 mx-auto mb-2" />
-                  <h4 className="text-sm font-semibold text-white">No Active Quest</h4>
-                  <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-                    Complete a journal entry or review to unlock your next quest.
-                  </p>
-                  <div className="mt-4">
-                    <Link href="/journal/new">
-                      <Button size="sm">
-                        <BookOpen className="mr-1.5 h-3.5 w-3.5" /> New Journal Entry
-                      </Button>
-                    </Link>
-                  </div>
-                </Card>
-              )}
-
-              {/* Latest Recommended Next Action */}
-              <Card className="border-indigo-500/20 bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-indigo-950/20 p-5">
-                <div className="flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-0.5 text-xs font-medium text-indigo-300">
-                    <Lightbulb className="h-3.5 w-3.5 text-indigo-400" />
-                    AI Study Recommendation
-                  </span>
-                  <span className="text-xs text-slate-400">
-                    From Latest Analysis
-                  </span>
-                </div>
-                <p className="mt-2.5 text-slate-300 text-xs sm:text-sm leading-relaxed">
-                  {latestNextAction ||
-                    "Complete today's adaptive review on weak concepts to prevent forgetting and reinforce your knowledge graph."}
-                </p>
-              </Card>
-
-              {/* Recent Journal Topics */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-white tracking-tight">
-                    Recent Journal Topics
-                  </h2>
-                  <Link
-                    href="/journal/new"
-                    className="text-xs text-indigo-400 hover:text-indigo-300"
-                  >
-                    Write New Reflection &rarr;
-                  </Link>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {recentJournals.map((entry) => (
-                    <Card
-                      key={entry.id}
-                      hoverable
-                      className="p-4 border-slate-800/90 bg-slate-900/60 flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-                          <span className="font-semibold text-indigo-300">
-                            {entry.subject}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3 text-slate-500" />
-                            {new Date(entry.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <h4 className="text-sm font-semibold text-white line-clamp-1">
-                          {entry.topic}
-                        </h4>
-                      </div>
-
-                      <div className="mt-3 flex items-center justify-between text-xs text-slate-400 border-t border-slate-800/60 pt-2">
-                        <span>
-                          Confidence:{" "}
-                          <strong className="text-slate-200">
-                            {entry.self_confidence} / 5
-                          </strong>
-                        </span>
-                        <Link
-                          href={`/insights/${entry.id}`}
-                          className="text-indigo-400 hover:text-indigo-300 font-medium inline-flex items-center gap-0.5"
-                        >
-                          Insights <ChevronRight className="h-3 w-3" />
-                        </Link>
-                      </div>
-                    </Card>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* Right Column: Quick Navigation & Knowledge Graph Status */}
-            <div className="space-y-4">
-              <Card className="border-slate-800 bg-slate-900/60 p-5">
-                <h3 className="text-sm font-semibold text-white mb-3">
-                  Self-Regulated Learning Actions
-                </h3>
-                <div className="space-y-3">
-                  {activeQuest && (
-                    <Link
-                      href={`/quests/${activeQuest.id}`}
-                      className="flex items-center justify-between rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-3 hover:border-indigo-500/50 hover:bg-indigo-500/10 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                          <Compass className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <div className="text-xs font-semibold text-slate-200">
-                            Active Quest
-                          </div>
-                          <div className="text-[10px] text-indigo-300">
-                            {completedQuestTasks} of {questTasks.length} tasks done
-                          </div>
-                        </div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-indigo-400" />
-                    </Link>
-                  )}
+            {/* Bottom: Upcoming Reviews & Quests (AlignIQ Upcoming Meetings Replica) */}
+            <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-xl">
+              <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                <span className="text-xs font-semibold text-white">
+                  Upcoming Adaptive Actions
+                </span>
+                <Link href="/review" className="text-[11px] font-mono text-indigo-400 hover:text-indigo-300">
+                  View queue &rarr;
+                </Link>
+              </div>
 
-                  <Link
-                    href="/review"
-                    className="flex items-center justify-between rounded-xl border border-slate-800 p-3 hover:border-slate-700 hover:bg-slate-800/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-400">
-                        <RotateCcw className="h-4 w-4" />
+              <div className="mt-3 space-y-2.5">
+                <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.02] p-3 hover:border-white/15 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+                      <Calendar className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold text-white">
+                        Python Recursion Base Cases
                       </div>
-                      <div>
-                        <div className="text-xs font-semibold text-slate-200">
-                          Adaptive Review
-                        </div>
-                        <div className="text-[10px] text-slate-400">
-                          {stats.reviewsDueCount > 0
-                            ? `${stats.reviewsDueCount} concepts due`
-                            : "3 targeted questions"}
-                        </div>
+                      <div className="text-[10px] font-mono text-slate-400 mt-0.5">
+                        Due in 2 hours &bull; High Priority
                       </div>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-slate-500" />
-                  </Link>
-
-                  <Link
-                    href="/journal/new"
-                    className="flex items-center justify-between rounded-xl border border-slate-800 p-3 hover:border-slate-700 hover:bg-slate-800/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
-                        <BookOpen className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold text-slate-200">
-                          New Reflection
-                        </div>
-                        <div className="text-[10px] text-slate-400">
-                          Log today&apos;s study session
-                        </div>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-slate-500" />
-                  </Link>
-
-                  <Link
-                    href="/knowledge-map"
-                    className="flex items-center justify-between rounded-xl border border-slate-800 p-3 hover:border-slate-700 hover:bg-slate-800/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                        <Layers className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold text-slate-200">
-                          Knowledge Map
-                        </div>
-                        <div className="text-[10px] text-slate-400">
-                          {stats.totalConcepts} concepts in graph
-                        </div>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-slate-500" />
+                  </div>
+                  <Link href="/review">
+                    <button className="rounded-lg bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-white/20 transition-colors">
+                      Review
+                    </button>
                   </Link>
                 </div>
-              </Card>
 
-              {/* Metacognitive Tip */}
-              <Card className="border-slate-800/80 bg-slate-950/40 p-4">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-lg bg-indigo-500/10 p-2 text-indigo-400 shrink-0">
-                    <Award className="h-4 w-4" />
+                <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.02] p-3 hover:border-white/15 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                      <Compass className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold text-white">
+                        {activeQuest?.title || "Trace Call Stack Termination"}
+                      </div>
+                      <div className="text-[10px] font-mono text-slate-400 mt-0.5">
+                        Micro-Quest &bull; +75 XP Reward
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs space-y-1">
-                    <span className="font-semibold text-white">
-                      Metacognitive Tip
-                    </span>
-                    <p className="text-slate-400 leading-relaxed">
-                      Testing yourself on concepts where confidence was high but practice revealed errors is the fastest way to solidify long-term retention.
-                    </p>
-                  </div>
+                  <Link href={activeQuest ? `/quests/${activeQuest.id}` : "/journal/new"}>
+                    <button className="rounded-lg bg-indigo-500/20 border border-indigo-500/30 px-2.5 py-1 text-[11px] font-medium text-indigo-300 hover:bg-indigo-500/30 transition-colors">
+                      Start
+                    </button>
+                  </Link>
                 </div>
-              </Card>
+              </div>
             </div>
           </div>
-        )}
+
+          {/* Column 3: Concept Health Pipeline & Active Quest (4 cols) */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Top: Donut Chart Concept Pipeline (AlignIQ Sales Pipeline Replica) */}
+            <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-xl">
+              <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                <span className="text-xs font-semibold text-white">
+                  Concept Health Pipeline
+                </span>
+                <span className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-mono text-slate-300">
+                  All Subjects
+                </span>
+              </div>
+
+              {/* AlignIQ Segmented Donut Chart */}
+              <div className="relative flex items-center justify-center my-6">
+                <svg className="w-48 h-48 -rotate-90" viewBox="0 0 120 120">
+                  {/* Background Track */}
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="45"
+                    fill="none"
+                    stroke="rgba(255, 255, 255, 0.05)"
+                    strokeWidth="16"
+                  />
+                  {/* Mastered Segment (Sky Blue) */}
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="45"
+                    fill="none"
+                    stroke="#60A5FA"
+                    strokeWidth="16"
+                    strokeDasharray="130 283"
+                    strokeDashoffset="0"
+                    strokeLinecap="round"
+                  />
+                  {/* Developing Segment (Lavender) */}
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="45"
+                    fill="none"
+                    stroke="#A78BFA"
+                    strokeWidth="16"
+                    strokeDasharray="60 283"
+                    strokeDashoffset="-140"
+                    strokeLinecap="round"
+                  />
+                  {/* Critical Due Segment (Dark Obsidian) */}
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="45"
+                    fill="none"
+                    stroke="#1E293B"
+                    strokeWidth="16"
+                    strokeDasharray="45 283"
+                    strokeDashoffset="-210"
+                    strokeLinecap="round"
+                  />
+                  {/* Overconfident Gaps (Coral / Striped Accent) */}
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="45"
+                    fill="none"
+                    stroke="#F87171"
+                    strokeWidth="16"
+                    strokeDasharray="25 283"
+                    strokeDashoffset="-260"
+                    strokeLinecap="round"
+                  />
+                </svg>
+
+                {/* Center Donut Conversion Rate */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                    Mastery Rate
+                  </span>
+                  <span className="text-2xl font-black text-white tracking-tight mt-0.5">
+                    88.4%
+                  </span>
+                </div>
+              </div>
+
+              {/* Bottom Breakdown Metric Strip (AlignIQ Replica) */}
+              <div className="grid grid-cols-4 gap-2 pt-3 border-t border-white/5 text-center">
+                <div>
+                  <div className="text-[10px] font-mono text-slate-500">Mastered</div>
+                  <div className="text-sm font-bold text-sky-400 mt-0.5">8</div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-mono text-slate-500">Developing</div>
+                  <div className="text-sm font-bold text-purple-400 mt-0.5">4</div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-mono text-slate-500">Critical</div>
+                  <div className="text-sm font-bold text-rose-400 mt-0.5">2</div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-mono text-slate-500">Total</div>
+                  <div className="text-sm font-bold text-white mt-0.5">14</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom: Active Quest Detail Card */}
+            {activeQuest ? (
+              <div className="rounded-3xl border border-indigo-500/30 bg-gradient-to-br from-indigo-950/20 via-white/[0.02] to-transparent p-5 backdrop-blur-xl">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-mono text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Compass className="h-3.5 w-3.5" /> Active Quest
+                  </span>
+                  <span className="text-[10px] font-mono text-amber-400 font-bold bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-full">
+                    +{activeQuest.reward_xp} XP
+                  </span>
+                </div>
+                <h4 className="text-sm font-bold text-white mt-2">
+                  {activeQuest.title}
+                </h4>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  {activeQuest.reason}
+                </p>
+
+                <div className="mt-4 space-y-1.5">
+                  <div className="flex justify-between text-[11px] font-mono text-slate-400">
+                    <span>Progress</span>
+                    <span>{questProgressPercent}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-indigo-500 to-[#34D399] transition-all duration-500"
+                      style={{ width: `${questProgressPercent}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+                  <span className="text-[10px] font-mono text-slate-500">
+                    {activeQuest.estimated_time} &bull; {activeQuest.difficulty}
+                  </span>
+                  <Link href={`/quests/${activeQuest.id}`}>
+                    <button className="text-xs font-semibold text-white hover:text-indigo-300 inline-flex items-center gap-1">
+                      Continue <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-xl text-center">
+                <Compass className="h-8 w-8 text-indigo-400/60 mx-auto mb-2" />
+                <h4 className="text-xs font-semibold text-white">No Active Quest</h4>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Complete today&apos;s reflection to unlock your next quest.
+                </p>
+                <Link href="/journal/new" className="inline-block mt-3">
+                  <button className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20 transition-colors">
+                    Write Reflection
+                  </button>
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Recent Reflections Strip */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-xl">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-base font-bold text-white tracking-tight">
+                Recent Study Reflections
+              </h2>
+              <p className="text-xs text-slate-400">
+                Logged reflections with self-reported confidence vs. verified comprehension
+              </p>
+            </div>
+            <Link
+              href="/journal/new"
+              className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1"
+            >
+              Write Reflection <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {recentJournals.length > 0 ? (
+              recentJournals.map((entry) => (
+                <Link
+                  key={entry.id}
+                  href={`/insights/${entry.id}`}
+                  className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 hover:border-white/20 hover:bg-white/[0.04] transition-all group"
+                >
+                  <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 mb-2">
+                    <span className="text-indigo-300 font-semibold">{entry.subject}</span>
+                    <span>{new Date(entry.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <h4 className="text-sm font-semibold text-white group-hover:text-[#34D399] transition-colors line-clamp-1">
+                    {entry.topic}
+                  </h4>
+                  <div className="mt-3 flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-white/5">
+                    <span>
+                      Confidence: <strong className="text-white">{entry.self_confidence}/5</strong>
+                    </span>
+                    <span className="text-indigo-400 text-xs font-medium inline-flex items-center gap-1">
+                      Insights <ChevronRight className="h-3 w-3" />
+                    </span>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <div className="col-span-full py-8 text-center text-xs text-slate-400">
+                No reflections logged yet. Click &ldquo;Add Reflection&rdquo; to test Cati SRL.
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </AppShell>
   );

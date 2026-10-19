@@ -146,7 +146,7 @@ export default function KnowledgeMapPage() {
         border: "border-amber-500/50",
         text: "text-amber-400",
         badge: "bg-amber-500/10 text-amber-300 border-amber-500/30",
-        label: "Developing (0.4 – 0.7)",
+        label: "Developing (0.4 to 0.7)",
         ring: "ring-amber-500/60",
       };
     }

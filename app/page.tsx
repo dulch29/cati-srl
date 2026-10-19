@@ -9,91 +9,230 @@ import {
   Zap,
   Layers,
   ArrowRight,
+  Sparkles,
+  Search,
+  Compass,
 } from "lucide-react";
 import { CatiLogo } from "@/components/layout/cati-logo";
 import { Button } from "@/components/ui/button";
 import { InteractiveLandingShowcase } from "@/components/landing/interactive-hero";
+import { ParticleWave } from "@/components/landing/particle-wave";
 
 export default function HomePage() {
   return (
-    <div className="relative min-h-screen flex flex-col justify-between overflow-hidden bg-[#090D14] bg-cartesian-grid text-slate-200">
-      {/* Subtle central radial illumination */}
-      <div className="pointer-events-none absolute inset-0 bg-subtle-glow" />
+    <div className="relative min-h-screen flex flex-col justify-between overflow-hidden bg-[#000000] text-slate-100 selection:bg-[#34D399]/20 selection:text-[#34D399]">
+      {/* 3D Generative Particle Wave Canvas (Syntara Aesthetic) */}
+      <ParticleWave />
 
-      {/* Navigation Header */}
-      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between p-6">
-        <CatiLogo size="lg" />
+      {/* Subtle Central Emerald & Indigo Illumination */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_15%,rgba(52,211,153,0.07),rgba(99,102,241,0.05),transparent_70%)]" />
+
+      {/* Navigation Header (Syntara Reference Layout) */}
+      <header className="relative z-20 mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-6 md:px-12">
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 border border-white/10 group-hover:border-[#34D399]/50 transition-colors">
+            <span className="h-2 w-2 rounded-full bg-[#34D399] shadow-[0_0_10px_#34D399]" />
+          </div>
+          <span className="text-lg font-bold tracking-tight text-white font-sans">
+            Cati<span className="text-[#34D399]">SRL</span>
+          </span>
+        </Link>
+
+        {/* Minimal Nav Links */}
+        <nav className="hidden md:flex items-center gap-8 text-xs font-medium text-slate-400">
+          <a href="#simulator" className="hover:text-white transition-colors">
+            Interactive Console
+          </a>
+          <a href="#methodology" className="hover:text-white transition-colors">
+            SRL Methodology
+          </a>
+          <Link href="/knowledge-map" className="hover:text-white transition-colors">
+            Knowledge Cartography
+          </Link>
+          <a href="#architecture" className="hover:text-white transition-colors">
+            Zimmerman Architecture
+          </a>
+        </nav>
+
+        {/* Action Button: High-Contrast Solid White */}
         <div className="flex items-center gap-3">
           <Link href="/login">
-            <Button variant="outline" size="sm">
+            <button className="hidden sm:inline-flex text-xs font-medium text-slate-300 hover:text-white px-4 py-2 transition-colors">
               Sign In
-            </Button>
+            </button>
           </Link>
           <Link href="/dashboard">
-            <Button size="sm">
-              Launch App
-            </Button>
+            <button className="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-xs font-semibold text-black transition-all hover:bg-slate-200 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.15)]">
+              Launch Console
+            </button>
           </Link>
         </div>
       </header>
 
       {/* Hero Section */}
-      <main className="relative z-10 mx-auto flex max-w-5xl flex-col items-center justify-center px-4 py-12 text-center">
-        {/* Release Pill */}
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/90 px-3.5 py-1 text-xs text-slate-300">
-          <span className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
-          <span>Next Byte Hacks V5 &bull; Self-Regulated Learning Instrument</span>
+      <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-col items-center justify-center px-4 pt-12 pb-20 sm:pt-16 sm:pb-24 text-center">
+        {/* Release Eyebrow Pill */}
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-md px-4 py-1.5 text-xs text-slate-300 shadow-inner">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#34D399] animate-pulse shadow-[0_0_8px_#34D399]" />
+          <span className="font-mono text-[11px] tracking-wide text-slate-300">
+            Next Byte Hacks V5 &bull; Metacognitive Calibration Instrument
+          </span>
         </div>
 
-        {/* Hero Title */}
-        <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl text-slate-100 max-w-4xl mx-auto">
-          The cognitive mirror for what you actually understand.
+        {/* Massive Editorial Hero Title (Syntara Reference) */}
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold tracking-tight text-white leading-[1.06] max-w-5xl mx-auto">
+          Turn Daily Reflections Into{" "}
+          <span className="text-[#34D399] drop-shadow-[0_0_40px_rgba(52,211,153,0.35)]">
+            Clear Decisions.
+          </span>
         </h1>
 
-        {/* Subtitle */}
-        <p className="mt-6 max-w-2xl text-base text-slate-400 sm:text-lg leading-relaxed mx-auto">
-          Most students mistake familiarity for mastery until exam day. Cati analyzes daily study reflections, exposes hidden conceptual gaps with verbatim evidence, and guides calibrated recovery through adaptive review.
+        {/* Crisp Subheadline */}
+        <p className="mt-6 max-w-2xl text-sm sm:text-base lg:text-lg text-slate-400 leading-relaxed mx-auto font-normal">
+          Most students mistake familiarity for mastery until exam day. Cati unifies daily study reflections, detects invisible conceptual blind spots with verbatim evidence, and guides calibrated recovery before opportunities disappear.
         </p>
 
-        {/* Primary Action Buttons */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+        {/* High-Contrast Action Buttons (Syntara Reference Style) */}
+        <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
           <Link href="/journal/new?sample=recursion">
-            <Button size="lg" className="shadow-lg shadow-indigo-500/20">
-              Try 2-Minute Demo Flow
-            </Button>
+            <button className="inline-flex items-center justify-center rounded-md bg-white px-7 py-3 text-sm font-semibold text-black transition-all hover:bg-slate-200 active:scale-95 shadow-[0_0_25px_rgba(255,255,255,0.2)]">
+              Explore the Platform
+            </button>
           </Link>
           <Link href="/dashboard">
-            <Button variant="secondary" size="lg">
-              Explore Dashboard
-            </Button>
+            <button className="inline-flex items-center justify-center rounded-md border border-white/20 bg-transparent px-7 py-3 text-sm font-semibold text-white transition-all hover:bg-white/5 hover:border-white/40 active:scale-95">
+              Book a Demo &bull; Console
+            </button>
           </Link>
         </div>
 
         {/* Methodology Indicators */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-xs text-slate-400">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1">
-            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" /> Metacognitive Calibration
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-xs text-slate-400">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.02] px-3.5 py-1 backdrop-blur-sm">
+            <CheckCircle2 className="h-3.5 w-3.5 text-[#34D399]" /> Metacognitive Calibration
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.02] px-3.5 py-1 backdrop-blur-sm">
             <ShieldCheck className="h-3.5 w-3.5 text-indigo-400" /> Verbatim Quotation Evidence
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.02] px-3.5 py-1 backdrop-blur-sm">
             <Zap className="h-3.5 w-3.5 text-amber-400" /> Deterministic Mastery Updates
           </span>
         </div>
 
-        {/* Interactive Simulator Section */}
-        <div className="mt-14 w-full">
+        {/* Interactive Simulator Section (AlignIQ Console Masterpiece) */}
+        <div id="simulator" className="mt-16 w-full max-w-5xl">
           <InteractiveLandingShowcase />
         </div>
+      </main>
 
-        {/* Cognitive Architecture Comparison Matrix */}
-        <div className="mt-20 w-full max-w-4xl text-left">
-          <div className="mb-6">
-            <span className="text-[11px] font-mono uppercase text-indigo-400 tracking-wider">
+      {/* Syntara Minimalist Uppercase Marquee Ribbon */}
+      <section className="relative z-10 w-full border-y border-white/10 bg-[#050505] py-4 overflow-hidden">
+        <div className="flex w-max items-center gap-8 text-[11px] font-mono uppercase tracking-[0.22em] text-slate-400 animate-[marquee_35s_linear_infinite]">
+          <span>REAL-TIME INSIGHT</span>
+          <span className="text-[#34D399]">&bull;</span>
+          <span>PATTERN DETECTION</span>
+          <span className="text-[#34D399]">&bull;</span>
+          <span>UNIFIED REFLECTION</span>
+          <span className="text-[#34D399]">&bull;</span>
+          <span>FASTER DECISIONS</span>
+          <span className="text-[#34D399]">&bull;</span>
+          <span>PREDICTIVE INTELLIGENCE</span>
+          <span className="text-[#34D399]">&bull;</span>
+          <span>EPISTEMIC KNOWLEDGE GRAPH</span>
+          <span className="text-[#34D399]">&bull;</span>
+          <span>ZERO ILLUSION OF COMPETENCE</span>
+          <span className="text-[#34D399]">&bull;</span>
+          <span>METACOGNITIVE CALIBRATION</span>
+          <span className="text-[#34D399]">&bull;</span>
+          <span>REAL-TIME INSIGHT</span>
+          <span className="text-[#34D399]">&bull;</span>
+          <span>PATTERN DETECTION</span>
+          <span className="text-[#34D399]">&bull;</span>
+          <span>UNIFIED REFLECTION</span>
+          <span className="text-[#34D399]">&bull;</span>
+          <span>FASTER DECISIONS</span>
+          <span className="text-[#34D399]">&bull;</span>
+          <span>PREDICTIVE INTELLIGENCE</span>
+          <span className="text-[#34D399]">&bull;</span>
+          <span>EPISTEMIC KNOWLEDGE GRAPH</span>
+        </div>
+      </section>
+
+      {/* Circular.wave Concentric Ripples Feature Section (Reference 2 Aesthetic) */}
+      <section id="methodology" className="relative z-10 w-full py-28 px-6 bg-gradient-to-b from-[#000000] via-[#05080E] to-[#000000] overflow-hidden">
+        {/* Concentric Disc Rings Background */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+          <div className="h-[400px] w-[400px] rounded-full border border-white/20 animate-[ping_8s_cubic-bezier(0,0,0.2,1)_infinite]" />
+          <div className="absolute h-[650px] w-[650px] rounded-full border border-white/10" />
+          <div className="absolute h-[900px] w-[900px] rounded-full border border-white/5" />
+          <div className="absolute h-[1150px] w-[1150px] rounded-full border border-white/[0.03]" />
+        </div>
+
+        <div className="relative mx-auto max-w-5xl text-center">
+          <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#34D399]">
+            The Cognitive Engine
+          </span>
+          <h2 className="mt-4 text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
+            Make Every Concept Stick, <br className="hidden sm:inline" />
+            Every Blindspot Visible.
+          </h2>
+          <p className="mt-5 max-w-2xl text-sm sm:text-base text-slate-400 mx-auto leading-relaxed">
+            We specialize in self-regulated learning systems that bring clarity to study sessions and precision to exam performance.
+          </p>
+
+          <div className="mt-8">
+            <Link href="/journal/new?sample=recursion">
+              <button className="inline-flex items-center justify-center rounded-full bg-white px-7 py-3 text-xs font-semibold text-black transition-all hover:bg-slate-200 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                Get Started
+              </button>
+            </Link>
+          </div>
+
+          {/* 4-Pillar Grid */}
+          <div className="mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-md hover:border-[#34D399]/40 transition-colors">
+              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Phase 01</span>
+              <h3 className="text-sm font-bold text-white mt-2">Study Reflection</h3>
+              <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+                Capture 2-minute daily notes with precision 1 to 5 confidence ratings across subjects and topics.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-md hover:border-[#34D399]/40 transition-colors">
+              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Phase 02</span>
+              <h3 className="text-sm font-bold text-white mt-2">Metacognition</h3>
+              <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+                Diagnose overconfidence gaps with verbatim quotation evidence from your own words.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-md hover:border-[#34D399]/40 transition-colors">
+              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Phase 03</span>
+              <h3 className="text-sm font-bold text-white mt-2">Knowledge Graph</h3>
+              <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+                Visualize prerequisite dependency trees color-coded by verified mastery and recall decay.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-md hover:border-[#34D399]/40 transition-colors">
+              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Phase 04</span>
+              <h3 className="text-sm font-bold text-white mt-2">Adaptive Action</h3>
+              <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+                Target weak concepts through 3-question adaptive practice reviews and 10-minute micro-quests.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Cognitive Architecture Comparison Matrix */}
+      <section id="architecture" className="relative z-10 w-full py-20 px-6 border-t border-white/10 bg-[#000000]">
+        <div className="mx-auto max-w-4xl text-left">
+          <div className="mb-8">
+            <span className="text-[11px] font-mono uppercase text-[#34D399] tracking-wider">
               Pedagogical Architecture
             </span>
-            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight mt-1">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mt-1">
               Why Traditional AI Chat Fails for Long-Term Learning
             </h2>
             <p className="mt-1 text-xs sm:text-sm text-slate-400">
@@ -103,8 +242,8 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* The Failure Mode: Passive AI */}
-            <div className="rounded-2xl border border-slate-800/80 bg-slate-950/60 p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 space-y-4 backdrop-blur-md">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <span className="text-xs font-semibold text-rose-400 flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full bg-rose-500" />
                   Passive AI Chatbots
@@ -128,67 +267,35 @@ export default function HomePage() {
             </div>
 
             {/* The Solution: Cati SRL */}
-            <div className="rounded-2xl border border-indigo-500/30 bg-slate-900/60 p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
-                <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <div className="rounded-2xl border border-[#34D399]/30 bg-[#34D399]/[0.02] p-6 space-y-4 backdrop-blur-md">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <span className="text-xs font-semibold text-[#34D399] flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-[#34D399]" />
                   Cati Metacognitive SRL
                 </span>
-                <span className="text-[10px] font-mono text-indigo-300">Calibrated Cognitive Growth</span>
+                <span className="text-[10px] font-mono text-[#34D399]/70">Calibrated Cognitive Growth</span>
               </div>
               <ul className="space-y-3 text-xs text-slate-300">
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="h-4 w-4 text-[#34D399] shrink-0 mt-0.5" />
                   <span><strong>Active self-evaluation:</strong> Students write what broke in their own words. AI measures the delta between confidence and evidence.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="h-4 w-4 text-[#34D399] shrink-0 mt-0.5" />
                   <span><strong>Persistent Knowledge Cartography:</strong> Tracks prerequisite dependencies so foundational misconceptions are resolved first.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="h-4 w-4 text-[#34D399] shrink-0 mt-0.5" />
                   <span><strong>Focused recovery loops:</strong> 3-question adaptive reviews and 10-minute micro-quests target the exact conceptual breakdown.</span>
                 </li>
               </ul>
             </div>
           </div>
         </div>
-
-        {/* 4-Pillar Process Overview */}
-        <div className="mt-16 grid w-full max-w-4xl grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-left">
-          <div className="rounded-xl border border-slate-800/80 bg-slate-950/40 p-4">
-            <span className="text-[10px] font-mono text-slate-500 uppercase">Phase 1</span>
-            <h3 className="text-xs font-bold text-slate-200 mt-1">Study Reflection</h3>
-            <p className="mt-1 text-[11px] text-slate-400 leading-normal">
-              Capture 2-minute daily notes with precision 1–5 confidence ratings.
-            </p>
-          </div>
-          <div className="rounded-xl border border-slate-800/80 bg-slate-950/40 p-4">
-            <span className="text-[10px] font-mono text-slate-500 uppercase">Phase 2</span>
-            <h3 className="text-xs font-bold text-slate-200 mt-1">Metacognition</h3>
-            <p className="mt-1 text-[11px] text-slate-400 leading-normal">
-              Diagnose overconfidence gaps with verbatim quotation evidence.
-            </p>
-          </div>
-          <div className="rounded-xl border border-slate-800/80 bg-slate-950/40 p-4">
-            <span className="text-[10px] font-mono text-slate-500 uppercase">Phase 3</span>
-            <h3 className="text-xs font-bold text-slate-200 mt-1">Knowledge Map</h3>
-            <p className="mt-1 text-[11px] text-slate-400 leading-normal">
-              Visualize prerequisite trees color-coded by real-time mastery.
-            </p>
-          </div>
-          <div className="rounded-xl border border-slate-800/80 bg-slate-950/40 p-4">
-            <span className="text-[10px] font-mono text-slate-500 uppercase">Phase 4</span>
-            <h3 className="text-xs font-bold text-slate-200 mt-1">Adaptive Action</h3>
-            <p className="mt-1 text-[11px] text-slate-400 leading-normal">
-              Target weak nodes through 3-question reviews and micro-quests.
-            </p>
-          </div>
-        </div>
-      </main>
+      </section>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-slate-800/80 py-8 text-center text-xs text-slate-500">
+      <footer className="relative z-10 border-t border-white/10 bg-[#000000] py-8 text-center text-xs text-slate-500">
         <p>Built for Next Byte Hacks V5 &bull; Grounded in Zimmerman&apos;s Self-Regulated Learning (SRL) Framework</p>
       </footer>
     </div>

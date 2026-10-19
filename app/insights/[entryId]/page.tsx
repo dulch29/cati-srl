@@ -31,6 +31,7 @@ import {
   getLocalJournalEntry,
   getLocalAiAnalysis,
 } from "@/lib/supabase/local-store";
+import { LuminousOrb } from "@/components/ui/luminous-orb";
 
 export const instant = false;
 
@@ -307,36 +308,52 @@ export default async function InsightsPage({ params }: PageProps) {
             {/* Metacognitive Calibration Card */}
             <Card className="glass-panel border-indigo-500/30 bg-[#0d121c] overflow-hidden shadow-2xl">
               <CardHeader>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${gapInfo?.color}`}
-                  >
-                    <Scale className="h-3.5 w-3.5" />
-                    {gapInfo?.title}
-                  </span>
-                  <span className="text-xs text-slate-400 font-mono">
-                    Calibration Delta:{" "}
-                    <strong
-                      className={
-                        analysis.confidence.self_reported - analysis.confidence.inferred > 0
-                          ? "text-amber-400"
-                          : analysis.confidence.self_reported - analysis.confidence.inferred < 0
-                          ? "text-indigo-400"
-                          : "text-emerald-400"
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-2 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${gapInfo?.color}`}
+                      >
+                        <Scale className="h-3.5 w-3.5" />
+                        {gapInfo?.title}
+                      </span>
+                      <span className="text-xs text-slate-400 font-mono">
+                        Calibration Delta:{" "}
+                        <strong
+                          className={
+                            analysis.confidence.self_reported - analysis.confidence.inferred > 0
+                              ? "text-amber-400"
+                              : analysis.confidence.self_reported - analysis.confidence.inferred < 0
+                              ? "text-indigo-400"
+                              : "text-emerald-400"
+                          }
+                        >
+                          {analysis.confidence.self_reported - analysis.confidence.inferred > 0
+                            ? `+${analysis.confidence.self_reported - analysis.confidence.inferred}`
+                            : analysis.confidence.self_reported - analysis.confidence.inferred}
+                        </strong>
+                      </span>
+                    </div>
+                    <CardTitle className="text-lg text-white mt-1">
+                      Metacognitive Calibration Spectrum
+                    </CardTitle>
+                    <CardDescription className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                      {gapInfo?.description}
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center justify-center shrink-0">
+                    <LuminousOrb
+                      state={
+                        analysis.confidence.gap === "overconfident"
+                          ? "overconfident"
+                          : analysis.confidence.gap === "underconfident"
+                          ? "thinking"
+                          : "calibrated"
                       }
-                    >
-                      {analysis.confidence.self_reported - analysis.confidence.inferred > 0
-                        ? `+${analysis.confidence.self_reported - analysis.confidence.inferred}`
-                        : analysis.confidence.self_reported - analysis.confidence.inferred}
-                    </strong>
-                  </span>
+                      size="md"
+                    />
+                  </div>
                 </div>
-                <CardTitle className="text-lg text-white mt-2">
-                  Metacognitive Calibration Spectrum
-                </CardTitle>
-                <CardDescription className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-                  {gapInfo?.description}
-                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Visual Spectrum Gauge */}

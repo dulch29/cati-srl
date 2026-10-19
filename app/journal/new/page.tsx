@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
+import { LuminousOrb } from "@/components/ui/luminous-orb";
 
 export default function NewJournalPage() {
   const router = useRouter();
@@ -251,15 +252,7 @@ export default function NewJournalPage() {
             <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 h-32 w-64 bg-indigo-500/20 blur-3xl" />
             
             <div className="flex flex-col items-center justify-center space-y-5">
-              <div className="relative">
-                <div className="h-16 w-16 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 shadow-lg shadow-indigo-500/25 animate-pulse">
-                  <Brain className="h-8 w-8" />
-                </div>
-                <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500" />
-                </span>
-              </div>
+              <LuminousOrb state="thinking" size="lg" className="mb-2" />
 
               <div className="space-y-1">
                 <h3 className="text-xl font-bold text-white">
