@@ -3,254 +3,345 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import {
-  Sparkles,
-  BookOpen,
-  BrainCircuit,
+  Brain,
   Network,
-  Award,
-  ArrowRight,
   CheckCircle2,
   AlertTriangle,
   Zap,
-  Flame,
-  Layers,
+  Clock,
+  ArrowRight,
+  ShieldAlert,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function InteractiveLandingShowcase() {
-  const [activeTab, setActiveTab] = useState<
-    "journal" | "calibration" | "graph" | "review" | "quest"
-  >("journal");
+interface CognitiveArchetype {
+  id: "overconfident" | "underconfident" | "aligned";
+  tag: string;
+  title: string;
+  student: string;
+  subject: string;
+  topic: string;
+  selfConfidence: number;
+  inferredConfidence: number;
+  delta: number;
+  quote: string;
+  annotatedWord: string;
+  annotation: string;
+  diagnosis: string;
+  graphNode: {
+    name: string;
+    status: string;
+    mastery: number;
+    color: string;
+    border: string;
+  };
+  quest: {
+    title: string;
+    duration: string;
+    action: string;
+    reward: string;
+  };
+}
 
-  const tabs = [
-    {
-      id: "journal" as const,
-      label: "1. Reflection",
-      icon: BookOpen,
-      color: "text-indigo-400",
-      accent: "from-indigo-500/20 to-indigo-500/0",
+const ARCHETYPES: CognitiveArchetype[] = [
+  {
+    id: "overconfident",
+    tag: "01 / Illusion of Competence",
+    title: "High Familiarity Masking Conceptual Breakdown",
+    student: "Alex Chen",
+    subject: "Computer Science",
+    topic: "Python Recursion & Base Cases",
+    selfConfidence: 4,
+    inferredConfidence: 2,
+    delta: 2,
+    quote:
+      "Today I studied Python recursion. I understand that a function calls itself, but I got confused about where to put the base case. I tried factorial and got an error.",
+    annotatedWord: "confused about where to put the base case",
+    annotation: "Evidence contradicts self-rating: boundary condition missing",
+    diagnosis:
+      "The student equates conceptual familiarity ('function calls itself') with implementation competence, yet the base-case guard was misplaced, triggering a runtime stack overflow.",
+    graphNode: {
+      name: "Base Case Guards",
+      status: "Weak (< 0.4)",
+      mastery: 20,
+      color: "text-rose-400 bg-rose-500/10",
+      border: "border-rose-500/30",
     },
-    {
-      id: "calibration" as const,
-      label: "2. Metacognition",
-      icon: BrainCircuit,
-      color: "text-amber-400",
-      accent: "from-amber-500/20 to-amber-500/0",
+    quest: {
+      title: "Trace Call Stack Termination",
+      duration: "10 mins",
+      action: "Trace call-frame allocations for factorial(3) on paper with explicit return conditions.",
+      reward: "+75 XP",
     },
-    {
-      id: "graph" as const,
-      label: "3. Knowledge Map",
-      icon: Network,
-      color: "text-emerald-400",
-      accent: "from-emerald-500/20 to-emerald-500/0",
+  },
+  {
+    id: "underconfident",
+    tag: "02 / Impostor Hesitation",
+    title: "Solid Operational Grasp Hampered by Hesitation",
+    student: "Maya Lin",
+    subject: "Data Structures",
+    topic: "Binary Tree In-Order Traversal",
+    selfConfidence: 2,
+    inferredConfidence: 4,
+    delta: -2,
+    quote:
+      "I feel like I don't really get it. I traversed left, processed root, then traversed right with null guards, and it produced sorted values in O(n), but I felt unsure the whole time.",
+    annotatedWord: "traversed left, processed root, then traversed right with null guards",
+    annotation: "Demonstrates correct recursive invariants & optimal complexity",
+    diagnosis:
+      "The student implemented the exact canonical invariant with null guards and correct asymptotic cost, yet downgraded their self-assessment due to subjective anxiety.",
+    graphNode: {
+      name: "In-Order Traversal",
+      status: "Strong (> 0.7)",
+      mastery: 80,
+      color: "text-emerald-400 bg-emerald-500/10",
+      border: "border-emerald-500/30",
     },
-    {
-      id: "review" as const,
-      label: "4. Adaptive SRS",
-      icon: Layers,
-      color: "text-cyan-400",
-      accent: "from-cyan-500/20 to-cyan-500/0",
+    quest: {
+      title: "Articulate Structural Invariant",
+      duration: "8 mins",
+      action: "Explain why left-root-right recursion yields sorted order in BSTs without checking notes.",
+      reward: "+60 XP",
     },
-    {
-      id: "quest" as const,
-      label: "5. Micro-Quest",
-      icon: Award,
-      color: "text-purple-400",
-      accent: "from-purple-500/20 to-purple-500/0",
+  },
+  {
+    id: "aligned",
+    tag: "03 / Calibrated Equilibrium",
+    title: "Accurate Self-Appraisal of the Learning Frontier",
+    student: "David K.",
+    subject: "Algorithms",
+    topic: "Dynamic Programming Memoization",
+    selfConfidence: 3,
+    inferredConfidence: 3,
+    delta: 0,
+    quote:
+      "I successfully cached subproblems for Fibonacci using a memoization dictionary, but I don't know how to convert this top-down logic into an iterative 2D tabulation grid.",
+    annotatedWord: "convert top-down logic into an iterative 2D tabulation grid",
+    annotation: "Accurate delineation of the current cognitive frontier",
+    diagnosis:
+      "The student possesses exact metacognitive awareness: they have mastered top-down memoization and precisely pinpointed the state-transition barrier preventing bottom-up tabulation.",
+    graphNode: {
+      name: "Top-Down Memoization",
+      status: "Developing (0.5 – 0.7)",
+      mastery: 65,
+      color: "text-amber-400 bg-amber-500/10",
+      border: "border-amber-500/30",
     },
-  ];
+    quest: {
+      title: "1D Tabulation Transition",
+      duration: "12 mins",
+      action: "Rewrite 1D Climbing Stairs bottom-up before attempting multi-dimensional grid arrays.",
+      reward: "+80 XP",
+    },
+  },
+];
+
+export function InteractiveLandingShowcase() {
+  const [selectedId, setSelectedId] = useState<"overconfident" | "underconfident" | "aligned">(
+    "overconfident"
+  );
+
+  const active = ARCHETYPES.find((a) => a.id === selectedId) || ARCHETYPES[0];
 
   return (
-    <div className="w-full max-w-4xl mx-auto rounded-3xl border border-slate-800/80 bg-slate-900/60 p-4 sm:p-6 shadow-2xl backdrop-blur-xl relative overflow-hidden">
-      {/* Background radial highlight */}
-      <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-64 w-96 rounded-full bg-indigo-500/10 blur-3xl" />
+    <div className="w-full max-w-4xl mx-auto rounded-2xl border border-slate-800 bg-[#0d121c] p-5 sm:p-7 shadow-2xl backdrop-blur-md relative overflow-hidden text-left">
+      {/* Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-5 border-b border-slate-800/80">
+        <div>
+          <span className="text-[11px] font-mono uppercase text-indigo-400 tracking-wider">
+            Interactive Diagnostic Simulator
+          </span>
+          <h2 className="text-base sm:text-lg font-semibold text-white tracking-tight mt-0.5">
+            Metacognitive Calibration in Action
+          </h2>
+        </div>
+        <span className="text-xs text-slate-400 font-mono self-start sm:self-auto">
+          Select student mental state below:
+        </span>
+      </div>
 
-      {/* Interactive Tabs Header */}
-      <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-3 border-b border-slate-800/80 no-scrollbar">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
+      {/* 3 Archetype Selector Tabs */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-4">
+        {ARCHETYPES.map((arch) => {
+          const isSelected = arch.id === selectedId;
           return (
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer ${
-                isActive
-                  ? "bg-slate-800 text-white border border-slate-700 shadow-md shadow-indigo-500/10"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/80"
+              key={arch.id}
+              onClick={() => setSelectedId(arch.id)}
+              className={`text-left p-3 rounded-xl border transition-all duration-150 cursor-pointer ${
+                isSelected
+                  ? "bg-slate-800/90 border-slate-600 shadow-md text-white"
+                  : "bg-slate-900/40 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-700"
               }`}
             >
-              <Icon className={`h-3.5 w-3.5 ${tab.color}`} />
-              <span>{tab.label}</span>
+              <div className="flex items-center justify-between text-[11px] font-mono">
+                <span>{arch.tag}</span>
+                <span
+                  className={`text-xs font-bold font-mono ${
+                    arch.delta > 0
+                      ? "text-amber-400"
+                      : arch.delta < 0
+                      ? "text-indigo-400"
+                      : "text-emerald-400"
+                  }`}
+                >
+                  {arch.delta > 0 ? `+${arch.delta}` : arch.delta}
+                </span>
+              </div>
+              <div className="text-xs font-semibold text-slate-200 mt-1 line-clamp-1">
+                {arch.topic}
+              </div>
             </button>
           );
         })}
       </div>
 
-      {/* Tab Visual Demonstration Preview */}
-      <div className="mt-5 min-h-[260px] flex flex-col justify-between">
-        {activeTab === "journal" && (
-          <div className="space-y-4 animate-in fade-in duration-200 text-left">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-indigo-400 font-semibold flex items-center gap-1.5">
-                <BookOpen className="h-4 w-4" /> Student Study Reflection
-              </span>
-              <span className="text-slate-500">Confidence: 4/5 (Confident)</span>
-            </div>
-            <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4 space-y-2">
-              <span className="text-[11px] font-mono text-slate-500 uppercase">
-                Topic: Python Recursion • Computer Science
-              </span>
-              <p className="text-sm text-slate-200 leading-relaxed font-mono text-xs sm:text-sm">
-                &ldquo;Today I studied Python recursion. I understand that a function
-                calls itself, but I got confused about where to put the base
-                case. I tried factorial and got an error.&rdquo;
-              </p>
-            </div>
-            <p className="text-xs text-slate-400">
-              The student feels generally confident (4/5), but their actual code crashed.
-              Cati compares what they <em>think</em> they know against the evidence.
-            </p>
-          </div>
-        )}
-
-        {activeTab === "calibration" && (
-          <div className="space-y-4 animate-in fade-in duration-200 text-left">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-amber-400 font-semibold flex items-center gap-1.5">
-                <BrainCircuit className="h-4 w-4" /> AI Metacognitive Diagnostic
-              </span>
-              <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-bold text-amber-300">
-                Misaligned (Overconfident)
-              </span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-3.5 space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-slate-500">
-                  Confidence Gap
-                </span>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-300">Self-Reported:</span>
-                  <strong className="text-white">4 / 5</strong>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-300">Evidence Inferred:</span>
-                  <strong className="text-amber-400">2 / 5</strong>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-3.5 space-y-1">
-                <span className="text-[10px] uppercase font-bold text-rose-400 flex items-center gap-1">
-                  <AlertTriangle className="h-3 w-3" /> Detected Misconception
-                </span>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Uncertainty regarding where and when the terminating base case must be placed.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "graph" && (
-          <div className="space-y-4 animate-in fade-in duration-200 text-left">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
-                <Network className="h-4 w-4" /> Personal Knowledge Map Update
-              </span>
-              <span className="text-slate-400">Prerequisite Tree</span>
-            </div>
-
-            <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4">
-              <div className="flex flex-wrap items-center justify-center gap-4 py-2">
-                <div className="flex items-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/10 px-3.5 py-2 text-xs font-bold text-rose-300 animate-pulse">
-                  <span className="h-2 w-2 rounded-full bg-rose-500" />
-                  Base Case (Mastery: 20% • Weak)
-                </div>
-                <span className="text-slate-600 font-mono text-xs">──prerequisite-to──►</span>
-                <div className="flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3.5 py-2 text-xs font-bold text-amber-300">
-                  <span className="h-2 w-2 rounded-full bg-amber-500" />
-                  Recursion (Mastery: 50% • Developing)
-                </div>
-              </div>
-            </div>
-            <p className="text-xs text-slate-400">
-              Cati shows that the student cannot truly master Recursion until its foundational prerequisite (Base Case) is resolved.
-            </p>
-          </div>
-        )}
-
-        {activeTab === "review" && (
-          <div className="space-y-4 animate-in fade-in duration-200 text-left">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-cyan-400 font-semibold flex items-center gap-1.5">
-                <Layers className="h-4 w-4" /> Adaptive 3-Question Review
-              </span>
-              <span className="text-indigo-400 font-mono">Question 1 of 3</span>
-            </div>
-            <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4 space-y-3">
-              <p className="text-xs sm:text-sm text-slate-200 font-medium">
-                &ldquo;Where should the base case condition be placed inside a recursive function, and why?&rdquo;
-              </p>
-              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300 space-y-1">
-                <div className="flex items-center gap-1.5 font-bold">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" /> Correct (+15 XP)
-                </div>
-                <p className="text-slate-300 text-[11px]">
-                  Mastery increased from 0.20 to 0.35. Review interval rescheduled to 2 days.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "quest" && (
-          <div className="space-y-4 animate-in fade-in duration-200 text-left">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-purple-400 font-semibold flex items-center gap-1.5">
-                <Award className="h-4 w-4" /> Personalized Micro-Quest
-              </span>
-              <span className="text-amber-400 font-bold flex items-center gap-1">
-                <Zap className="h-3.5 w-3.5" /> +75 XP Reward
-              </span>
-            </div>
-            <div className="rounded-2xl border border-indigo-500/30 bg-indigo-950/20 p-4 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-bold text-white">Tame the Base Case</h4>
-                <span className="text-[10px] text-slate-400">⏱️ 10 mins</span>
-              </div>
-              <div className="space-y-1.5 text-xs text-slate-300">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                  <span>Trace factorial(3) recursion call stack on paper</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                  <span>Implement termination condition before recursive step</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* CTA Bar */}
-        <div className="pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3 text-xs text-slate-400">
-            <span className="flex items-center gap-1 text-amber-400">
-              <Flame className="h-3.5 w-3.5 fill-amber-400/20" /> Streak tracking
+      {/* Simulator Workspace */}
+      <div className="mt-5 space-y-4">
+        {/* Metacognitive Balance Beam */}
+        <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+          <div className="flex items-center justify-between text-xs mb-3">
+            <span className="text-slate-300 font-medium flex items-center gap-2">
+              <Brain className="h-4 w-4 text-indigo-400" />
+              Calibration Spectrum
             </span>
-            <span className="flex items-center gap-1 text-indigo-400">
-              <Zap className="h-3.5 w-3.5 fill-indigo-400/20" /> XP progression
+            <span
+              className={`font-mono text-xs px-2.5 py-0.5 rounded-full border ${
+                active.delta > 0
+                  ? "border-amber-500/40 bg-amber-500/10 text-amber-300"
+                  : active.delta < 0
+                  ? "border-indigo-500/40 bg-indigo-500/10 text-indigo-300"
+                  : "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+              }`}
+            >
+              {active.delta > 0
+                ? "Overconfidence (+2 Gap)"
+                : active.delta < 0
+                ? "Underconfidence (-2 Gap)"
+                : "Calibrated (0 Delta)"}
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Link href="/journal/new?sample=recursion">
-              <Button size="sm">
-                Try Live Interactive Demo <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-              </Button>
-            </Link>
+          {/* Spectrum Bar */}
+          <div className="relative w-full h-3 bg-slate-900 rounded-full border border-slate-800 overflow-hidden flex items-center">
+            <div className="absolute inset-y-0 left-1/2 w-0.5 bg-slate-600 -translate-x-1/2" />
+            <div
+              className={`h-full rounded-full transition-all duration-300 ${
+                active.delta > 0
+                  ? "w-2/3 ml-auto bg-amber-500/40"
+                  : active.delta < 0
+                  ? "w-2/3 mr-auto bg-indigo-500/40"
+                  : "w-1/4 mx-auto bg-emerald-500/60"
+              }`}
+            />
+          </div>
+
+          <div className="flex justify-between text-[10px] font-mono text-slate-500 mt-2 px-1">
+            <span>-2 (Underconfident)</span>
+            <span className="text-slate-400 font-semibold">0 (Equilibrium)</span>
+            <span>+2 (Overconfident)</span>
           </div>
         </div>
+
+        {/* Verbatim Reflection with Analytical Highlight */}
+        <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 space-y-2">
+          <div className="flex items-center justify-between text-xs text-slate-400">
+            <span className="font-mono text-[11px] text-slate-500">
+              Student Reflection: {active.student} ({active.subject})
+            </span>
+            <span>
+              Self-Report: <strong className="text-white">{active.selfConfidence} / 5</strong> &bull; AI Evidence:{" "}
+              <strong
+                className={
+                  active.inferredConfidence < 3
+                    ? "text-amber-400"
+                    : active.inferredConfidence >= 4
+                    ? "text-emerald-400"
+                    : "text-slate-200"
+                }
+              >
+                {active.inferredConfidence} / 5
+              </strong>
+            </span>
+          </div>
+
+          <div className="p-3 rounded-lg bg-slate-900/90 border border-slate-800/80 font-mono text-xs text-slate-300 leading-relaxed">
+            &ldquo;
+            {active.quote.split(active.annotatedWord)[0]}
+            <mark className="bg-amber-400/20 text-amber-200 px-1 py-0.5 rounded border-b border-amber-400">
+              {active.annotatedWord}
+            </mark>
+            {active.quote.split(active.annotatedWord)[1]}
+            &rdquo;
+          </div>
+
+          <div className="flex items-start gap-2 pt-1 text-xs text-slate-400">
+            <ShieldAlert className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+            <p className="leading-relaxed text-slate-300">
+              <strong className="text-white">Cognitive Diagnostic:</strong> {active.diagnosis}
+            </p>
+          </div>
+        </div>
+
+        {/* Reactive Graph Node & Micro-Quest Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Knowledge Graph Reaction */}
+          <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-3.5 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400 font-medium flex items-center gap-1.5">
+                <Network className="h-3.5 w-3.5 text-indigo-400" />
+                Knowledge Graph Calibration
+              </span>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${active.graphNode.color} ${active.graphNode.border}`}>
+                {active.graphNode.status}
+              </span>
+            </div>
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-xs font-semibold text-white">{active.graphNode.name}</span>
+              <span className="text-xs font-mono font-bold text-slate-300">{active.graphNode.mastery}%</span>
+            </div>
+            <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-300 ${
+                  active.graphNode.mastery < 40
+                    ? "bg-rose-500"
+                    : active.graphNode.mastery < 70
+                    ? "bg-amber-500"
+                    : "bg-emerald-500"
+                }`}
+                style={{ width: `${active.graphNode.mastery}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Prescribed Micro-Quest */}
+          <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-3.5 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400 font-medium flex items-center gap-1.5">
+                <Zap className="h-3.5 w-3.5 text-amber-400" />
+                Prescribed Micro-Quest
+              </span>
+              <span className="text-[10px] font-mono text-slate-500 flex items-center gap-1">
+                <Clock className="h-3 w-3" /> {active.quest.duration}
+              </span>
+            </div>
+            <div className="text-xs font-semibold text-white">{active.quest.title}</div>
+            <p className="text-[11px] text-slate-400 leading-normal">{active.quest.action}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Simulator Bottom Actions */}
+      <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <span className="text-xs text-slate-400">
+          Grounded in Zimmerman&apos;s Self-Regulated Learning (SRL) cyclical phases.
+        </span>
+        <Link href="/journal/new?sample=recursion">
+          <Button size="sm">
+            Test Live With Your Reflection
+          </Button>
+        </Link>
       </div>
     </div>
   );

@@ -41,49 +41,50 @@ export default function NewJournalPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Confidence labels required
+  // 5-Stage Metacognitive Calibration Scale (Zimmerman SRL Framework)
   const confidenceLabels: Record<
     number,
-    { title: string; emoji: string; desc: string; advice: string; color: string; ringColor: string }
+    { title: string; level: string; desc: string; advice: string; color: string; ringColor: string }
   > = {
     1: {
-      title: "1 - Very unsure",
-      emoji: "😟",
-      desc: "Completely lost or uncertain about fundamental concepts.",
+      title: "Fundamental Confusion",
+      level: "Level 1",
+      desc: "Cannot identify prerequisite relations; mental model contradicts runtime behavior.",
       advice: "Cati will isolate foundational prerequisites to help you build intuition from scratch.",
       color: "text-rose-400",
-      ringColor: "border-rose-500/40 bg-rose-500/10",
+      ringColor: "border-rose-500/40 bg-rose-500/5",
     },
     2: {
-      title: "2 - Unsure",
-      emoji: "🤔",
-      desc: "Grasp bits and pieces, but feel shaky about applying it.",
+      title: "Shaky Application",
+      level: "Level 2",
+      desc: "Grasps isolated syntax; breaks down when combining conditions or tracing boundaries.",
       advice: "Cati will identify what clicked and pinpoint the specific obstacle slowing you down.",
       color: "text-amber-400",
-      ringColor: "border-amber-500/40 bg-amber-500/10",
+      ringColor: "border-amber-500/40 bg-amber-500/5",
     },
     3: {
-      title: "3 - Neutral",
-      emoji: "😐",
-      desc: "Average confidence; understand basics but uncertain on edge cases.",
+      title: "Working Mental Model",
+      level: "Level 3",
+      desc: "Executes standard patterns; uncertain of edge cases, complexity limits, or invariants.",
       advice: "Cati will test edge cases and problem-solving reasoning to elevate your mastery.",
       color: "text-yellow-400",
-      ringColor: "border-yellow-500/40 bg-yellow-500/10",
+      ringColor: "border-yellow-500/40 bg-yellow-500/5",
     },
     4: {
-      title: "4 - Confident",
-      emoji: "🙂",
-      desc: "Can explain and implement core mechanics comfortably.",
+      title: "Articulated Competence",
+      level: "Level 4",
+      desc: "Predicts failure modes accurately; explains causal mechanics in own words.",
       advice: "Cati will verify if your reflection evidence supports this to guard against overconfidence.",
       color: "text-indigo-400",
-      ringColor: "border-indigo-500/40 bg-indigo-500/10",
+      ringColor: "border-indigo-500/40 bg-indigo-500/5",
     },
     5: {
-      title: "5 - Very confident",
-      emoji: "🚀",
-      desc: "Full mastery; could easily teach or debug complex scenarios.",
+      title: "Fluent & Teachable",
+      level: "Level 5",
+      desc: "Synthesizes transfer problems; can identify and debug peer misconceptions.",
       advice: "Cati will challenge your mental model with advanced conceptual reviews.",
       color: "text-emerald-400",
-      ringColor: "border-emerald-500/40 bg-emerald-500/10",
+      ringColor: "border-emerald-500/40 bg-emerald-500/5",
     },
   };
 
@@ -387,21 +388,50 @@ export default function NewJournalPage() {
                   />
                 </div>
 
-                {/* Self-Reported Confidence Slider (1 to 5) */}
+                {/* Self-Reported Metacognitive Calibration Instrument (1 to 5) */}
                 <div
-                  className={`space-y-3 rounded-2xl border p-4 transition-all duration-200 ${confidenceLabels[confidence].ringColor}`}
+                  className={`space-y-4 rounded-2xl border p-4 sm:p-5 transition-all duration-200 ${confidenceLabels[confidence].ringColor}`}
                 >
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                      <HelpCircle className="h-4 w-4 text-indigo-400" />
-                      Self-Reported Confidence Level
-                    </label>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+                        <HelpCircle className="h-4 w-4 text-indigo-400" />
+                        Metacognitive Calibration Rating
+                      </span>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Estimate your current mastery before Cati evaluates your evidence.
+                      </p>
+                    </div>
                     <span
-                      className={`text-xs font-bold flex items-center gap-1.5 ${confidenceLabels[confidence].color}`}
+                      className={`text-xs font-mono font-bold px-2.5 py-1 rounded-full border border-slate-700 bg-slate-900/90 ${confidenceLabels[confidence].color}`}
                     >
-                      <span className="text-base">{confidenceLabels[confidence].emoji}</span>
-                      {confidenceLabels[confidence].title}
+                      {confidenceLabels[confidence].level} &bull; {confidenceLabels[confidence].title}
                     </span>
+                  </div>
+
+                  {/* 5-Step Tactile Segmented Selector */}
+                  <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+                    {[1, 2, 3, 4, 5].map((lvl) => {
+                      const isSelected = confidence === lvl;
+                      return (
+                        <button
+                          key={lvl}
+                          type="button"
+                          onClick={() => setConfidence(lvl)}
+                          disabled={isSubmitting}
+                          className={`py-2.5 px-1 sm:px-2 rounded-xl text-center border transition-all cursor-pointer ${
+                            isSelected
+                              ? "bg-slate-800 border-indigo-500/60 shadow-md text-white font-bold"
+                              : "bg-slate-950/60 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                          }`}
+                        >
+                          <div className="text-xs font-mono font-bold">0{lvl}</div>
+                          <div className="text-[10px] truncate hidden sm:block mt-0.5 text-slate-400">
+                            {confidenceLabels[lvl].title.split(" ")[0]}
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
 
                   <input
@@ -412,34 +442,15 @@ export default function NewJournalPage() {
                     value={confidence}
                     disabled={isSubmitting}
                     onChange={(e) => setConfidence(Number(e.target.value))}
-                    className="w-full accent-indigo-500 cursor-pointer h-2.5 bg-slate-800 rounded-lg disabled:opacity-50"
+                    className="w-full accent-indigo-500 cursor-pointer h-2 bg-slate-800 rounded-lg disabled:opacity-50"
                   />
 
-                  {/* 5-Step Slider Labels */}
-                  <div className="grid grid-cols-5 text-center text-[10px] text-slate-400 font-medium px-1">
-                    <span className={confidence === 1 ? "text-rose-400 font-bold" : ""}>
-                      1: Lost
-                    </span>
-                    <span className={confidence === 2 ? "text-amber-400 font-bold" : ""}>
-                      2: Shaky
-                    </span>
-                    <span className={confidence === 3 ? "text-yellow-400 font-bold" : ""}>
-                      3: Moderate
-                    </span>
-                    <span className={confidence === 4 ? "text-indigo-400 font-bold" : ""}>
-                      4: Confident
-                    </span>
-                    <span className={confidence === 5 ? "text-emerald-400 font-bold" : ""}>
-                      5: Master
-                    </span>
-                  </div>
-
-                  <div className="pt-1 text-xs text-slate-300 space-y-1">
-                    <p className="italic text-slate-400">
+                  <div className="pt-1 text-xs text-slate-300 space-y-1.5 bg-slate-950/40 p-3 rounded-xl border border-slate-800/60">
+                    <p className="text-slate-300 font-mono text-[11px]">
                       &ldquo;{confidenceLabels[confidence].desc}&rdquo;
                     </p>
-                    <p className="text-[11px] text-indigo-300/90 font-medium">
-                      💡 {confidenceLabels[confidence].advice}
+                    <p className="text-[11px] text-indigo-300/90">
+                      <strong>SRL Focus:</strong> {confidenceLabels[confidence].advice}
                     </p>
                   </div>
                 </div>

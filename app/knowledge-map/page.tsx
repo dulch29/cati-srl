@@ -295,9 +295,9 @@ export default function KnowledgeMapPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800/80 pb-6">
           <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-indigo-400 mb-1">
+            <div className="flex items-center gap-2 text-xs font-mono text-indigo-400 mb-1">
               <Network className="h-3.5 w-3.5" />
-              <span>Metacognitive Knowledge Map</span>
+              <span>Epistemic Knowledge Graph</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
               Learner Knowledge Graph

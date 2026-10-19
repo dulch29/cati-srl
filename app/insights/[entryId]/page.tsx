@@ -305,7 +305,7 @@ export default async function InsightsPage({ params }: PageProps) {
         {analysis ? (
           <>
             {/* Metacognitive Calibration Card */}
-            <Card className="glass-panel border-indigo-500/30 bg-gradient-to-br from-slate-900/90 via-slate-900/70 to-indigo-950/30 overflow-hidden shadow-xl shadow-indigo-950/20">
+            <Card className="glass-panel border-indigo-500/30 bg-[#0d121c] overflow-hidden shadow-2xl">
               <CardHeader>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span
@@ -332,19 +332,48 @@ export default async function InsightsPage({ params }: PageProps) {
                   </span>
                 </div>
                 <CardTitle className="text-lg text-white mt-2">
-                  Confidence vs. Demonstrated Evidence
+                  Metacognitive Calibration Spectrum
                 </CardTitle>
                 <CardDescription className="text-slate-300 text-xs sm:text-sm leading-relaxed">
                   {gapInfo?.description}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Visual Spectrum Gauge */}
+                <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 space-y-2.5">
+                  <div className="flex items-center justify-between text-xs text-slate-400">
+                    <span>Calibration Axis</span>
+                    <span className="font-mono text-slate-300">
+                      Self-Reported ({analysis.confidence.self_reported}) vs. AI Evidence ({analysis.confidence.inferred})
+                    </span>
+                  </div>
+
+                  <div className="relative w-full h-3 bg-slate-900 rounded-full border border-slate-800 overflow-hidden flex items-center">
+                    <div className="absolute inset-y-0 left-1/2 w-0.5 bg-slate-600 -translate-x-1/2" />
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        analysis.confidence.self_reported - analysis.confidence.inferred > 0
+                          ? "w-2/3 ml-auto bg-amber-500/40"
+                          : analysis.confidence.self_reported - analysis.confidence.inferred < 0
+                          ? "w-2/3 mr-auto bg-indigo-500/40"
+                          : "w-1/4 mx-auto bg-emerald-500/60"
+                      }`}
+                    />
+                  </div>
+
+                  <div className="flex justify-between text-[10px] font-mono text-slate-500 px-1">
+                    <span>-2 (Underconfident)</span>
+                    <span className="text-slate-400 font-semibold">0 (Calibrated Equilibrium)</span>
+                    <span>+2 (Overconfident / Illusion of Competence)</span>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Self-reported Meter */}
                   <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-slate-400 font-medium">
-                        Self-Reported Rating
+                        Student Self-Rating
                       </span>
                       <span className="text-xl font-bold text-indigo-400 font-mono">
                         {analysis.confidence.self_reported}{" "}
@@ -358,7 +387,7 @@ export default async function InsightsPage({ params }: PageProps) {
                           key={lvl}
                           className={`h-full rounded-full transition-all duration-300 ${
                             lvl <= analysis.confidence.self_reported
-                              ? "bg-gradient-to-r from-indigo-500 to-indigo-400 shadow-sm shadow-indigo-500/50"
+                              ? "bg-indigo-500"
                               : "bg-slate-800"
                           }`}
                         />
@@ -374,7 +403,7 @@ export default async function InsightsPage({ params }: PageProps) {
                   <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-slate-400 font-medium">
-                        AI Inferred Evidence Score
+                        Demonstrated Evidence Score
                       </span>
                       <span
                         className={`text-xl font-bold font-mono ${
@@ -395,8 +424,8 @@ export default async function InsightsPage({ params }: PageProps) {
                           className={`h-full rounded-full transition-all duration-300 ${
                             lvl <= analysis.confidence.inferred
                               ? analysis.confidence.inferred < 3
-                                ? "bg-gradient-to-r from-amber-500 to-amber-400 shadow-sm shadow-amber-500/50"
-                                : "bg-gradient-to-r from-emerald-500 to-emerald-400 shadow-sm shadow-emerald-500/50"
+                                ? "bg-amber-500"
+                                : "bg-emerald-500"
                               : "bg-slate-800"
                           }`}
                         />
@@ -413,8 +442,8 @@ export default async function InsightsPage({ params }: PageProps) {
                 <div className="rounded-xl border border-slate-800/80 bg-slate-900/40 p-3.5 flex items-start gap-2.5 text-xs text-slate-300">
                   <Sparkles className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-semibold text-white">Why this matters: </span>
-                    Metacognitive calibration prevents the &quot;illusion of competence&quot; where familiarity is mistaken for true recall mastery. Closing this gap produces the fastest learning retention gains.
+                    <span className="font-semibold text-white">Why calibration matters: </span>
+                    Metacognitive calibration prevents the &quot;illusion of competence&quot; where familiarity is mistaken for true recall mastery. Closing this delta produces the steepest learning retention gains.
                   </div>
                 </div>
               </CardContent>
