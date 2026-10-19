@@ -213,11 +213,16 @@ function LoginForm() {
   );
 }
 
+import { InteractiveAmbientBackground } from "@/components/ui/interactive-ambient-background";
+
 export default function LoginPage() {
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center p-4 bg-[#0B0F17]">
+    <div className="relative min-h-screen flex flex-col items-center justify-center p-4 bg-[#060913] overflow-hidden">
+      {/* Interactive Ambient Background with flashlight matrix and shockwave ripples */}
+      <InteractiveAmbientBackground />
+
       {/* Background ambient lighting */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-[450px] w-[600px] rounded-full bg-gradient-to-tr from-indigo-600/15 via-violet-500/10 to-transparent blur-3xl" />
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-[550px] w-[700px] rounded-full bg-gradient-to-tr from-blue-600/15 via-blue-400/10 to-transparent blur-3xl" />
 
       <div className="w-full max-w-md space-y-6 relative z-10">
         <div className="flex flex-col items-center text-center space-y-2">

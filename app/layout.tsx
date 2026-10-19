@@ -18,6 +18,8 @@ export const metadata: Metadata = {
     "Turn daily study reflections into personalized, adaptive learning actions, calibrated metacognitive insights, and personal knowledge graphs.",
 };
 
+import { PageTransitionLoader } from "@/components/ui/page-transition-loader";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,7 +30,8 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
     >
-      <body className="min-h-full bg-[#0B0F17] text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
+      <body className="min-h-full bg-[#060913] text-slate-100 flex flex-col font-sans selection:bg-blue-500/30 selection:text-blue-200">
+        <PageTransitionLoader />
         {children}
       </body>
     </html>

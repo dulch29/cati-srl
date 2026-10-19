@@ -8,6 +8,8 @@ import { BottomNav } from "./bottom-nav";
 import { CatiLogo } from "./cati-logo";
 import { ToastProvider } from "@/components/ui/toast";
 import { InteractiveAmbientBackground } from "@/components/ui/interactive-ambient-background";
+import { SidebarProvider, useSidebar } from "./sidebar-context";
+import { cn } from "@/lib/utils";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -16,19 +18,20 @@ interface AppShellProps {
   xp?: number;
 }
 
-export function AppShell({
+function AppShellInner({
   children,
   userEmail,
   streak = 0,
   xp = 0,
 }: AppShellProps) {
-  return (
-    <ToastProvider>
-      <div className="min-h-screen bg-[#080C14] text-slate-100 flex flex-col md:flex-row relative">
-        {/* Interactive Ambient Background */}
-        <InteractiveAmbientBackground />
+  const { isCollapsed } = useSidebar();
 
-        {/* Desktop Sidebar with Suspense boundary */}
+  return (
+    <div className="min-h-screen bg-[#080C14] text-slate-100 flex flex-col md:flex-row relative">
+      {/* Interactive Ambient Background */}
+      <InteractiveAmbientBackground />
+
+      {/* Desktop Sidebar with Suspense boundary */}
       <Suspense
         fallback={
           <div className="hidden md:flex h-screen w-64 border-r border-slate-800/80 bg-slate-950/70 p-5 fixed left-0 top-0" />
@@ -46,14 +49,19 @@ export function AppShell({
           <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/10 px-2 py-0.5 text-amber-400 border border-amber-500/20">
             <Flame className="h-3 w-3 fill-amber-400/20" /> {streak}d
           </span>
-          <span className="inline-flex items-center gap-1 rounded-lg bg-indigo-500/10 px-2 py-0.5 text-indigo-400 border border-indigo-500/20">
-            <Zap className="h-3 w-3 fill-indigo-400/20" /> {xp} XP
+          <span className="inline-flex items-center gap-1 rounded-lg bg-blue-500/10 px-2 py-0.5 text-blue-400 border border-blue-500/20">
+            <Zap className="h-3 w-3 fill-blue-400/20" /> {xp} XP
           </span>
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1 md:pl-64 pb-20 md:pb-8 flex flex-col">
+      {/* Main Content Area: dynamically adjusts padding based on sidebar collapsed state */}
+      <main
+        className={cn(
+          "flex-1 pb-20 md:pb-8 flex flex-col transition-all duration-300 ease-in-out",
+          isCollapsed ? "md:pl-20" : "md:pl-64"
+        )}
+      >
         <div className="mx-auto w-full max-w-6xl p-4 sm:p-6 lg:p-8">
           {children}
         </div>
@@ -63,7 +71,16 @@ export function AppShell({
       <Suspense fallback={<div className="h-16 md:hidden" />}>
         <BottomNav />
       </Suspense>
-      </div>
+    </div>
+  );
+}
+
+export function AppShell(props: AppShellProps) {
+  return (
+    <ToastProvider>
+      <SidebarProvider>
+        <AppShellInner {...props} />
+      </SidebarProvider>
     </ToastProvider>
   );
 }

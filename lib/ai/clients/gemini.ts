@@ -62,8 +62,8 @@ export async function callGeminiForAnalysis(prompt: string): Promise<string> {
   const client = getGeminiClient();
 
   // Primary model preference, configurable via GEMINI_MODEL
-  const primaryModel = process.env.GEMINI_MODEL || "gemini-3.8-flash";
-  const fallbackModels = ["gemini-3.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash"];
+  const primaryModel = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  const fallbackModels = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.5-pro"];
 
   const candidateModels = [
     primaryModel,

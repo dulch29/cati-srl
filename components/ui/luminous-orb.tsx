@@ -103,10 +103,10 @@ export function LuminousOrb({
 
     window.addEventListener("mousemove", handleWindowMouseMove);
 
-    // Smooth spring physics interpolation towards target gaze
+    // Smooth snappy physics interpolation towards target gaze (ultra responsive)
     const loop = () => {
-      currentGazeX += (targetGazeX - currentGazeX) * 0.08;
-      currentGazeY += (targetGazeY - currentGazeY) * 0.08;
+      currentGazeX += (targetGazeX - currentGazeX) * 0.28;
+      currentGazeY += (targetGazeY - currentGazeY) * 0.28;
       setGaze({ x: currentGazeX, y: currentGazeY });
       animId = requestAnimationFrame(loop);
     };
@@ -125,7 +125,7 @@ export function LuminousOrb({
     let phase = 0;
 
     const loop = () => {
-      phase += isHovered ? 0.05 : 0.02;
+      phase += isHovered ? 0.06 : 0.025;
       setLiquidPhase(phase);
       animId = requestAnimationFrame(loop);
     };
@@ -159,7 +159,7 @@ export function LuminousOrb({
       onClick={handleClick}
       style={{
         transform: `perspective(600px) rotateX(${-gaze.y * (isHovered ? 26 : 18)}deg) rotateY(${gaze.x * (isHovered ? 26 : 18)}deg) scale(${isHovered ? 1.12 : 1})`,
-        transition: "transform 0.18s cubic-bezier(0.16, 1, 0.3, 1)",
+        transition: "transform 0.05s ease-out",
       }}
       className={`relative flex items-center justify-center cursor-pointer select-none ${sizeClasses} ${className}`}
     >
@@ -204,7 +204,7 @@ export function LuminousOrb({
 
         {/* Dynamic Specular Lens Flare ALWAYS Staring at Cursor */}
         <div
-          className="absolute w-14 h-14 rounded-full bg-white/60 blur-md pointer-events-none transition-all duration-100 ease-out"
+          className="absolute w-14 h-14 rounded-full bg-white/60 blur-md pointer-events-none transition-all duration-75 ease-out"
           style={{
             left: `calc(50% + ${gaze.x * 38}% - 28px)`,
             top: `calc(50% + ${gaze.y * 38}% - 28px)`,
@@ -217,7 +217,7 @@ export function LuminousOrb({
         <div className="relative w-full h-full rounded-full backdrop-blur-md flex items-center justify-center overflow-hidden">
           {/* Layer A: Viscous Blue Fluid Mass Staring at Cursor */}
           <div
-            className="absolute transition-all duration-300 ease-out"
+            className="absolute transition-all duration-100 ease-out"
             style={{
               width: isHovered ? "80%" : "60%",
               height: isHovered ? "80%" : "60%",
@@ -231,7 +231,7 @@ export function LuminousOrb({
 
           {/* Layer B: Counter-Rotating Fluid Distortion */}
           <div
-            className="absolute transition-all duration-500 ease-out"
+            className="absolute transition-all duration-150 ease-out"
             style={{
               width: isHovered ? "65%" : "48%",
               height: isHovered ? "65%" : "48%",
@@ -244,7 +244,7 @@ export function LuminousOrb({
 
           {/* Layer C: Staring Lens Pupil / Core that Tracks the Eye of the User */}
           <div
-            className="relative rounded-full transition-all duration-200 pointer-events-none flex items-center justify-center"
+            className="relative rounded-full transition-all duration-75 pointer-events-none flex items-center justify-center"
             style={{
               width: isHovered ? "45%" : "38%",
               height: isHovered ? "45%" : "38%",
@@ -261,7 +261,7 @@ export function LuminousOrb({
           >
             {/* The Staring Pupil Highlight */}
             <div
-              className="w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_10px_#ffffff] transition-all duration-100"
+              className="w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_10px_#ffffff] transition-all duration-75"
               style={{
                 transform: `translate(${gaze.x * 4}px, ${gaze.y * 4}px) scale(${isHovered ? 1.4 : 1})`,
               }}
