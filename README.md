@@ -1,7 +1,9 @@
 # Cati SRL: AI Self-Regulated Learning Companion
 
 > **Hackathon**: Next Byte Hacks V5  
-> **Tagline**: Turning daily study reflections into personalized, adaptive learning actions, calibrated metacognition, and dynamic knowledge graphs.
+> **Tagline**: Turning daily study reflections into personalized, adaptive learning actions, calibrated metacognition, and dynamic knowledge graphs.  
+> **Live Production App**: **[https://cati-srl.vercel.app](https://cati-srl.vercel.app)**  
+> **Team Alias**: [https://cati-srl-biblio3115-1431s-projects.vercel.app](https://cati-srl-biblio3115-1431s-projects.vercel.app)
 
 ---
 
