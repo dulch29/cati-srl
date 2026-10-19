@@ -13,16 +13,11 @@ import {
   Paperclip,
   Send,
   CheckCircle2,
-  AlertTriangle,
   XCircle,
   Brain,
-  Sparkles,
   Bot,
-  User,
-  ArrowRight,
   ShieldAlert,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export function ConversationalArchitecture() {
   const [activeThread, setActiveThread] = useState<"chatbot" | "cati">("cati");
@@ -30,7 +25,7 @@ export function ConversationalArchitecture() {
   return (
     <section
       id="architecture"
-      className="relative z-10 w-full py-24 px-6 border-t border-white/10 bg-[#060913] overflow-hidden"
+      className="relative z-10 w-full py-24 px-6 border-t border-white/10 bg-transparent overflow-hidden"
     >
       <div className="mx-auto max-w-6xl text-left">
         <div className="mb-10 text-center max-w-3xl mx-auto">
@@ -44,25 +39,25 @@ export function ConversationalArchitecture() {
             Why traditional AI chatbots produce the illusion of competence, and how Cati&apos;s Zimmerman SRL framework enforces long-term retention.
           </p>
 
-          {/* Thread Switcher Bar */}
-          <div className="mt-8 inline-flex p-1.5 rounded-2xl border border-white/10 bg-slate-950/80 backdrop-blur-xl shadow-xl">
+          {/* Satisfying Interactive Thread Switcher Bar */}
+          <div className="mt-8 inline-flex p-1.5 rounded-2xl border border-white/10 bg-slate-950/80 backdrop-blur-xl shadow-2xl relative">
             <button
               onClick={() => setActiveThread("chatbot")}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-300 cursor-pointer ${
                 activeThread === "chatbot"
-                  ? "bg-rose-500/15 text-rose-300 border border-rose-500/40 shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-lg shadow-rose-500/10 scale-100"
+                  : "text-slate-400 hover:text-slate-200 scale-95"
               }`}
             >
               <XCircle className="h-4 w-4 text-rose-400" />
-              <span>Thread A: Passive AI Chatbot (Failure)</span>
+              <span>Thread A: Passive AI Chatbot (Failure Mode)</span>
             </button>
             <button
               onClick={() => setActiveThread("cati")}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-300 cursor-pointer ${
                 activeThread === "cati"
-                  ? "bg-blue-600/20 text-blue-300 border border-blue-500/40 shadow-sm shadow-blue-500/20"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-blue-600/20 text-blue-300 border border-blue-500/40 shadow-lg shadow-blue-500/20 scale-100"
+                  : "text-slate-400 hover:text-slate-200 scale-95"
               }`}
             >
               <CheckCircle2 className="h-4 w-4 text-blue-400" />
@@ -74,9 +69,9 @@ export function ConversationalArchitecture() {
         {/* ========================================================
             LINEAR-STYLE DUAL CONVERSATION SHOWCASE (MIRRORS IMAGE 2)
            ======================================================== */}
-        <div className="relative rounded-3xl border border-white/10 bg-[#0B0F17]/90 backdrop-blur-2xl p-4 sm:p-8 shadow-2xl overflow-hidden">
+        <div className="relative rounded-3xl border border-white/10 bg-[#0B0F17]/85 backdrop-blur-2xl p-4 sm:p-8 shadow-2xl overflow-hidden">
           {/* Background Linear Kanban Board Silhouette */}
-          <div className="absolute inset-0 opacity-[0.08] pointer-events-none p-6 grid grid-cols-3 gap-4 select-none font-mono text-[10px]">
+          <div className="absolute inset-0 opacity-[0.07] pointer-events-none p-6 grid grid-cols-3 gap-4 select-none font-mono text-[10px]">
             <div className="space-y-3">
               <div className="text-slate-400 border-b border-white/10 pb-1">TODO &bull; 71</div>
               <div className="rounded-lg bg-white/10 p-2 text-white">ENG-926: Remove UI inconsistencies</div>
@@ -113,14 +108,17 @@ export function ConversationalArchitecture() {
               </button>
             </div>
 
-            {/* Conversation Messages Stream */}
-            <div className="p-5 sm:p-6 space-y-5 text-left min-h-[360px]">
+            {/* Conversation Messages Stream: User Left, AI Right */}
+            <div className="p-5 sm:p-6 space-y-6 text-left min-h-[400px]">
               {/* THREAD A: PASSIVE CHATBOT FAILURE */}
               {activeThread === "chatbot" && (
-                <div className="space-y-5 animate-in fade-in duration-300">
-                  {/* Turn 1: Student Prompt */}
-                  <div className="flex items-start gap-3">
-                    <div className="h-8 w-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-200 shrink-0">
+                <div
+                  key="chatbot-thread"
+                  className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300"
+                >
+                  {/* Turn 1: Student Prompt (LEFT SIDE) */}
+                  <div className="flex justify-start items-start gap-3 max-w-[88%]">
+                    <div className="h-8 w-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-200 shrink-0 shadow-sm">
                       AC
                     </div>
                     <div className="space-y-1">
@@ -128,40 +126,40 @@ export function ConversationalArchitecture() {
                         <span className="text-xs font-semibold text-white">Alex Chen</span>
                         <span className="text-[10px] font-mono text-slate-500">10:14 AM</span>
                       </div>
-                      <p className="text-xs text-slate-300 leading-relaxed">
-                        Hey I&apos;m trying to write factorial in Python with recursion, but my code keeps throwing <code className="bg-slate-900 text-rose-300 px-1 py-0.5 rounded">RecursionError: maximum recursion depth exceeded</code>. Can you just fix it for me?
-                      </p>
+                      <div className="rounded-2xl rounded-tl-sm border border-slate-800 bg-slate-900/90 p-3.5 text-xs text-slate-300 shadow-md leading-relaxed">
+                        Hey I&apos;m trying to write factorial in Python with recursion, but my code keeps throwing <code className="bg-slate-950 text-rose-300 px-1 py-0.5 rounded border border-rose-500/20">RecursionError: maximum recursion depth exceeded</code>. Can you just fix it for me?
+                      </div>
                     </div>
                   </div>
 
-                  {/* Turn 2: Generic AI Instant Solution */}
-                  <div className="flex items-start gap-3">
-                    <div className="h-8 w-8 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-xs font-bold text-rose-300 shrink-0">
-                      <Bot className="h-4 w-4 text-rose-400" />
-                    </div>
-                    <div className="space-y-1.5 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-rose-300">Generic AI Bot</span>
-                        <span className="text-[10px] font-mono text-slate-500">10:14 AM</span>
+                  {/* Turn 2: Generic AI Instant Solution (RIGHT SIDE) */}
+                  <div className="flex justify-end items-start gap-3 max-w-[88%] ml-auto">
+                    <div className="space-y-1.5 flex-1 text-right">
+                      <div className="flex items-center justify-end gap-2">
                         <span className="text-[9px] font-mono text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
                           Instant Answer (No Cognitive Load)
                         </span>
+                        <span className="text-[10px] font-mono text-slate-500">10:14 AM</span>
+                        <span className="text-xs font-semibold text-rose-300">Generic AI Bot</span>
                       </div>
-                      <p className="text-xs text-slate-300">
-                        Sure! Here is the fixed code. You were missing a base case guard:
-                      </p>
-                      <pre className="rounded-xl border border-white/10 bg-slate-950 p-3 font-mono text-[11px] text-blue-300 overflow-x-auto">
+                      <div className="rounded-2xl rounded-tr-sm border border-rose-500/30 bg-rose-950/20 p-3.5 text-xs text-left text-slate-200 shadow-lg space-y-2">
+                        <p>Sure! Here is the fixed code. You were missing a base case guard:</p>
+                        <pre className="rounded-xl border border-white/10 bg-slate-950 p-2.5 font-mono text-[11px] text-blue-300 overflow-x-auto">
 {`def factorial(n):
     if n <= 1:
         return 1
     return n * factorial(n - 1)`}
-                      </pre>
+                        </pre>
+                      </div>
+                    </div>
+                    <div className="h-8 w-8 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-xs font-bold text-rose-300 shrink-0 shadow-sm">
+                      <Bot className="h-4 w-4 text-rose-400" />
                     </div>
                   </div>
 
-                  {/* Turn 3: Student Passive Acceptance */}
-                  <div className="flex items-start gap-3">
-                    <div className="h-8 w-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-200 shrink-0">
+                  {/* Turn 3: Student Passive Acceptance (LEFT SIDE) */}
+                  <div className="flex justify-start items-start gap-3 max-w-[88%]">
+                    <div className="h-8 w-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-200 shrink-0 shadow-sm">
                       AC
                     </div>
                     <div className="space-y-1">
@@ -169,20 +167,20 @@ export function ConversationalArchitecture() {
                         <span className="text-xs font-semibold text-white">Alex Chen</span>
                         <span className="text-[10px] font-mono text-slate-500">10:15 AM</span>
                       </div>
-                      <p className="text-xs text-slate-300">
+                      <div className="rounded-2xl rounded-tl-sm border border-slate-800 bg-slate-900/90 p-3 text-xs text-slate-300 shadow-md">
                         Awesome thanks! That was so easy, I totally get it now.
-                      </p>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Turn 4: The 48-Hour Exam Breakdown */}
-                  <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-4 space-y-2">
+                  {/* Turn 4: The 48-Hour Exam Breakdown (FULL WIDTH) */}
+                  <div className="rounded-xl border border-rose-500/30 bg-rose-950/25 p-4 space-y-2">
                     <div className="flex items-center gap-2 text-rose-400 text-xs font-semibold">
                       <ShieldAlert className="h-4 w-4" />
                       <span>Exam Day &bull; 48 Hours Later</span>
                     </div>
                     <p className="text-xs text-slate-300 leading-relaxed">
-                      Alex was tested on writing a recursive binary tree search helper from scratch. Because the AI eliminated productive struggle, Alex could not reconstruct the call-stack termination conditions. Score: <strong>0 / 15 points (Forgetting Cliff)</strong>.
+                      Alex was tested on writing a recursive binary tree search helper from scratch. Because the chatbot eliminated productive struggle, Alex could not reconstruct call-stack termination conditions. Score: <strong className="text-rose-400">0 / 15 points (Forgetting Cliff)</strong>.
                     </p>
                   </div>
                 </div>
@@ -190,10 +188,13 @@ export function ConversationalArchitecture() {
 
               {/* THREAD B: CATI SRL CLOSED-LOOP CALIBRATION */}
               {activeThread === "cati" && (
-                <div className="space-y-5 animate-in fade-in duration-300">
-                  {/* Turn 1: Student Self-Reflection */}
-                  <div className="flex items-start gap-3">
-                    <div className="h-8 w-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-200 shrink-0">
+                <div
+                  key="cati-thread"
+                  className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300"
+                >
+                  {/* Turn 1: Student Self-Reflection (LEFT SIDE) */}
+                  <div className="flex justify-start items-start gap-3 max-w-[88%]">
+                    <div className="h-8 w-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-200 shrink-0 shadow-sm">
                       AC
                     </div>
                     <div className="space-y-1">
@@ -204,37 +205,39 @@ export function ConversationalArchitecture() {
                           Self-Reported: 4/5 Confidence
                         </span>
                       </div>
-                      <p className="text-xs text-slate-300 leading-relaxed font-mono">
+                      <div className="rounded-2xl rounded-tl-sm border border-slate-800 bg-slate-900/90 p-3.5 text-xs text-slate-300 font-mono shadow-md leading-relaxed">
                         &quot;Today I studied Python recursion. I understand that a function calls itself, but I got confused about where to put the base case. I tried factorial and got an error.&quot;
-                      </p>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Turn 2: Cati Metacognitive Diagnostic Intervention */}
-                  <div className="flex items-start gap-3">
-                    <div className="h-8 w-8 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-xs font-bold text-blue-300 shrink-0">
-                      <Brain className="h-4 w-4 text-blue-400" />
-                    </div>
-                    <div className="space-y-2 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-blue-300">Cati SRL Companion</span>
-                        <span className="text-[10px] font-mono text-slate-500">10:14 AM</span>
+                  {/* Turn 2: Cati Metacognitive Diagnostic Intervention (RIGHT SIDE) */}
+                  <div className="flex justify-end items-start gap-3 max-w-[88%] ml-auto">
+                    <div className="space-y-1.5 flex-1 text-right">
+                      <div className="flex items-center justify-end gap-2">
                         <span className="text-[9px] font-mono text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/20">
                           Socratic Diagnosis &bull; &Delta; -2 Overconfident
                         </span>
+                        <span className="text-[10px] font-mono text-slate-500">10:14 AM</span>
+                        <span className="text-xs font-semibold text-blue-300">Cati SRL Companion</span>
                       </div>
-                      <p className="text-xs text-slate-300 leading-relaxed">
-                        Notice your calibration gap: you reported <strong>4/5 confidence</strong>, but wrote you were <em>&quot;confused about where to put the base case&quot;</em>.
-                      </p>
-                      <p className="text-xs text-slate-300 leading-relaxed">
-                        Let&apos;s inspect your mental model: when <code className="bg-slate-900 text-blue-300 px-1 py-0.5 rounded">factorial(3)</code> calls <code className="bg-slate-900 text-blue-300 px-1 py-0.5 rounded">factorial(2)</code>, what instruction stops Python from allocating new stack frames for <code className="bg-slate-900 text-blue-300 px-1 py-0.5 rounded">factorial(-1)</code>?
-                      </p>
+                      <div className="rounded-2xl rounded-tr-sm border border-blue-500/40 bg-blue-950/30 p-3.5 text-xs text-left text-slate-200 shadow-[0_0_25px_rgba(59,130,246,0.15)] space-y-2">
+                        <p>
+                          Notice your calibration gap: you reported <strong>4/5 confidence</strong>, but wrote you were <em>&quot;confused about where to put the base case&quot;</em>.
+                        </p>
+                        <p className="text-blue-200">
+                          Let&apos;s inspect your mental model: when <code className="bg-slate-900 text-blue-300 px-1 py-0.5 rounded border border-blue-400/20">factorial(3)</code> calls <code className="bg-slate-900 text-blue-300 px-1 py-0.5 rounded border border-blue-400/20">factorial(2)</code>, what instruction stops Python from allocating new stack frames for <code className="bg-slate-900 text-blue-300 px-1 py-0.5 rounded border border-blue-400/20">factorial(-1)</code>?
+                        </p>
+                      </div>
+                    </div>
+                    <div className="h-8 w-8 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-xs font-bold text-blue-300 shrink-0 shadow-sm shadow-blue-500/20">
+                      <Brain className="h-4 w-4 text-blue-400" />
                     </div>
                   </div>
 
-                  {/* Turn 3: Student Active Articulation */}
-                  <div className="flex items-start gap-3">
-                    <div className="h-8 w-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-200 shrink-0">
+                  {/* Turn 3: Student Active Articulation (LEFT SIDE) */}
+                  <div className="flex justify-start items-start gap-3 max-w-[88%]">
+                    <div className="h-8 w-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-200 shrink-0 shadow-sm">
                       AC
                     </div>
                     <div className="space-y-1">
@@ -242,13 +245,13 @@ export function ConversationalArchitecture() {
                         <span className="text-xs font-semibold text-white">Alex Chen</span>
                         <span className="text-[10px] font-mono text-slate-500">10:16 AM</span>
                       </div>
-                      <p className="text-xs text-blue-200">
+                      <div className="rounded-2xl rounded-tl-sm border border-blue-500/30 bg-blue-950/40 p-3.5 text-xs text-blue-100 shadow-md leading-relaxed">
                         Wait... without an if guard right at the top, the function never returns a value, so the stack grows infinitely until memory overflows!
-                      </p>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Turn 4: Automated System SRL Updates */}
+                  {/* Turn 4: Automated System SRL Updates (FULL WIDTH) */}
                   <div className="rounded-xl border border-blue-500/30 bg-blue-950/20 p-4 space-y-2">
                     <div className="flex items-center justify-between text-blue-400 text-xs font-semibold">
                       <span className="flex items-center gap-1.5">
@@ -280,15 +283,15 @@ export function ConversationalArchitecture() {
               </div>
               <div className="flex items-center justify-between px-1 text-slate-500">
                 <div className="flex items-center gap-2">
-                  <button className="h-6 w-6 rounded hover:bg-white/5 flex items-center justify-center hover:text-slate-300"><Plus className="h-3.5 w-3.5" /></button>
-                  <button className="h-6 w-6 rounded hover:bg-white/5 flex items-center justify-center hover:text-slate-300"><Type className="h-3.5 w-3.5" /></button>
-                  <button className="h-6 w-6 rounded hover:bg-white/5 flex items-center justify-center hover:text-slate-300"><Smile className="h-3.5 w-3.5" /></button>
-                  <button className="h-6 w-6 rounded hover:bg-white/5 flex items-center justify-center hover:text-slate-300"><AtSign className="h-3.5 w-3.5" /></button>
-                  <button className="h-6 w-6 rounded hover:bg-white/5 flex items-center justify-center hover:text-slate-300"><Video className="h-3.5 w-3.5" /></button>
-                  <button className="h-6 w-6 rounded hover:bg-white/5 flex items-center justify-center hover:text-slate-300"><Mic className="h-3.5 w-3.5" /></button>
-                  <button className="h-6 w-6 rounded hover:bg-white/5 flex items-center justify-center hover:text-slate-300"><Paperclip className="h-3.5 w-3.5" /></button>
+                  <button className="h-6 w-6 rounded hover:bg-white/5 flex items-center justify-center hover:text-slate-300 cursor-pointer"><Plus className="h-3.5 w-3.5" /></button>
+                  <button className="h-6 w-6 rounded hover:bg-white/5 flex items-center justify-center hover:text-slate-300 cursor-pointer"><Type className="h-3.5 w-3.5" /></button>
+                  <button className="h-6 w-6 rounded hover:bg-white/5 flex items-center justify-center hover:text-slate-300 cursor-pointer"><Smile className="h-3.5 w-3.5" /></button>
+                  <button className="h-6 w-6 rounded hover:bg-white/5 flex items-center justify-center hover:text-slate-300 cursor-pointer"><AtSign className="h-3.5 w-3.5" /></button>
+                  <button className="h-6 w-6 rounded hover:bg-white/5 flex items-center justify-center hover:text-slate-300 cursor-pointer"><Video className="h-3.5 w-3.5" /></button>
+                  <button className="h-6 w-6 rounded hover:bg-white/5 flex items-center justify-center hover:text-slate-300 cursor-pointer"><Mic className="h-3.5 w-3.5" /></button>
+                  <button className="h-6 w-6 rounded hover:bg-white/5 flex items-center justify-center hover:text-slate-300 cursor-pointer"><Paperclip className="h-3.5 w-3.5" /></button>
                 </div>
-                <button className="h-7 w-7 rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-md shadow-blue-600/30">
+                <button className="h-7 w-7 rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-md shadow-blue-600/30 cursor-pointer transition-colors">
                   <Send className="h-3.5 w-3.5" />
                 </button>
               </div>

@@ -21,13 +21,13 @@ export function ParticleWave() {
     if (!ctx) return;
 
     let animationFrameId: number;
-    let width = (canvas.width = canvas.parentElement?.clientWidth || window.innerWidth);
-    let height = (canvas.height = canvas.parentElement?.clientHeight || 750);
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
 
     const handleResize = () => {
-      if (!canvas || !canvas.parentElement) return;
-      width = canvas.width = canvas.parentElement.clientWidth;
-      height = canvas.height = canvas.parentElement.clientHeight || 750;
+      if (!canvas) return;
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
     };
 
     window.addEventListener("resize", handleResize);
@@ -48,9 +48,8 @@ export function ParticleWave() {
     const ripples: WaveRipple[] = [];
 
     const handleMouseMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      targetMouseX = e.clientX - rect.left;
-      targetMouseY = e.clientY - rect.top;
+      targetMouseX = e.clientX;
+      targetMouseY = e.clientY;
       mouseSpeed = Math.min(
         40,
         Math.hypot(targetMouseX - prevMouseX, targetMouseY - prevMouseY)
@@ -60,14 +59,11 @@ export function ParticleWave() {
     };
 
     const handleClick = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
       ripples.push({
-        x,
-        y,
+        x: e.clientX,
+        y: e.clientY,
         radius: 0,
-        maxRadius: Math.max(width, height) * 0.7,
+        maxRadius: Math.max(width, height) * 0.75,
         strength: 55,
       });
     };
@@ -79,132 +75,130 @@ export function ParticleWave() {
     const dustCount = 45;
     const dustMotes = Array.from({ length: dustCount }, () => ({
       x: Math.random() * width,
-      y: Math.random() * height * 0.7,
-      vx: (Math.random() - 0.5) * 0.6,
-      vy: (Math.random() - 0.5) * 0.6,
-      size: Math.random() * 1.8 + 0.6,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4,
+      size: Math.random() * 1.5 + 0.8,
       baseAlpha: Math.random() * 0.5 + 0.2,
       phase: Math.random() * Math.PI * 2,
     }));
 
     const render = () => {
-      step += 0.016;
-
-      // Smooth mouse interpolation
-      mouseX += (targetMouseX - mouseX) * 0.06;
-      mouseY += (targetMouseY - mouseY) * 0.06;
-
       ctx.clearRect(0, 0, width, height);
 
-      // 1. Draw and update interactive ripples
+      // Smooth mouse interpolation
+      mouseX += (targetMouseX - mouseX) * 0.08;
+      mouseY += (targetMouseY - mouseY) * 0.08;
+
+      step += 0.016;
+
+      // Update shockwave ripples
       for (let i = ripples.length - 1; i >= 0; i--) {
-        const rip = ripples[i];
-        rip.radius += 5.5;
-        rip.strength *= 0.985;
-
-        // Draw crisp sapphire ripple ring
-        ctx.beginPath();
-        ctx.arc(rip.x, rip.y, rip.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(96, 165, 250, ${Math.max(0, (rip.strength / 55) * 0.65)})`;
-        ctx.lineWidth = 2;
-        ctx.shadowColor = "#3b82f6";
-        ctx.shadowBlur = 12;
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-
-        if (rip.radius > rip.maxRadius || rip.strength < 0.5) {
+        const r = ripples[i];
+        r.radius += 6.5;
+        r.strength *= 0.96;
+        if (r.radius > r.maxRadius || r.strength < 0.2) {
           ripples.splice(i, 1);
         }
       }
 
-      // 2. Draw 3D undulating particle wave grid
-      const cellW = (width * 1.35) / cols;
-      const startX = -width * 0.17;
-      const baseY = height * 0.54;
+      // Camera & Perspective Settings
+      const fov = 420;
+      const cameraY = -80;
+      const cameraZ = -140;
 
+      // Render 3D Undulating Particle Grid (Blue & Sapphire Theme)
       for (let r = 0; r < rows; r++) {
-        const depthPercent = r / rows; // 0 = back, 1 = front
-        const yOffset = (r - rows / 2) * 8.5;
-        const perspective = 0.52 + depthPercent * 0.7;
-
-        // Mouse influence factor
-        const mouseDistY = (mouseY - baseY) * 0.18 * (1 - depthPercent);
-
         for (let c = 0; c < cols; c++) {
-          const x = startX + c * cellW;
+          // Normalized Coordinates (-1 to 1)
+          const nx = (c / (cols - 1)) * 2 - 1;
+          const nz = (r / (rows - 1)) * 2 - 1;
 
-          // Harmonic wave frequencies
-          const wave1 = Math.sin(c * 0.085 + step + r * 0.12) * 48;
-          const wave2 = Math.cos(c * 0.052 - step * 0.75 + r * 0.08) * 32;
-          const wave3 = Math.sin(r * 0.18 + step * 1.15) * 22;
+          // World space positions
+          const worldX = nx * (width * 0.85);
+          const worldZ = (nz + 1) * 350 + 40; // Depth distance from camera
 
-          // Interactive Mouse Vortex & Lift
-          const distToMouse = Math.hypot(x - mouseX, baseY + yOffset - mouseY);
-          const mouseLift = Math.max(0, (300 - distToMouse) / 300) * (45 + mouseSpeed * 0.5);
+          // Compound Multi-Harmonic Wave Equation
+          const distFromCenter = Math.hypot(nx * 1.2, nz);
+          let worldY =
+            Math.sin(nx * 4.5 + step * 1.2) * 22 +
+            Math.cos(nz * 3.8 + step * 0.9) * 20 +
+            Math.sin((nx + nz) * 3.0 + step * 1.6) * 14 +
+            Math.sin(distFromCenter * 6 - step * 1.8) * 12;
 
-          // Apply ripple displacement
-          let rippleDisplacement = 0;
-          for (let k = 0; k < ripples.length; k++) {
-            const rip = ripples[k];
-            const distToRip = Math.hypot(x - rip.x, baseY + yOffset - rip.y);
-            const ripDiff = Math.abs(distToRip - rip.radius);
-            if (ripDiff < 60) {
-              rippleDisplacement += Math.cos((ripDiff / 60) * Math.PI) * rip.strength;
+          // Mouse Fluid Repulsion & Gravitational Deflection
+          const screenApproxX = width / 2 + (worldX / (worldZ + cameraZ)) * fov;
+          const screenApproxY = height * 0.55 + ((worldY - cameraY) / (worldZ + cameraZ)) * fov;
+
+          const dxMouse = screenApproxX - mouseX;
+          const dyMouse = screenApproxY - mouseY;
+          const distMouse = Math.hypot(dxMouse, dyMouse);
+
+          if (distMouse < 220) {
+            const influence = Math.pow(1 - distMouse / 220, 2);
+            // Repel upwards and outwards dynamically based on cursor velocity
+            worldY -= influence * (35 + mouseSpeed * 1.2);
+          }
+
+          // Apply Shockwave Ripples
+          for (const ripple of ripples) {
+            const dR = Math.hypot(screenApproxX - ripple.x, screenApproxY - ripple.y);
+            const deltaR = Math.abs(dR - ripple.radius);
+            if (deltaR < 60) {
+              const waveFactor = Math.cos((deltaR / 60) * Math.PI * 0.5);
+              worldY += waveFactor * ripple.strength * Math.sin(deltaR * 0.1);
             }
           }
 
-          const y =
-            baseY +
-            (wave1 + wave2 + wave3 + mouseDistY - mouseLift + rippleDisplacement) * perspective +
-            yOffset;
+          // 3D Perspective Projection
+          const zProjected = worldZ + cameraZ;
+          if (zProjected <= 10) continue;
 
-          // Particle sizing & opacity based on proximity & depth
-          const isNearMouse = distToMouse < 220;
-          const mouseGlowBonus = isNearMouse ? (1 - distToMouse / 220) * 0.6 : 0;
-          const baseRadius = (0.75 + depthPercent * 1.45 + (isNearMouse ? 0.6 : 0)) * perspective;
-          const alpha = Math.min(
-            1,
-            Math.max(
-              0.04,
-              (0.14 + depthPercent * 0.68 + mouseGlowBonus) *
-                (1 - Math.abs(c - cols / 2) / (cols * 0.56))
-            )
-          );
+          const scale = fov / zProjected;
+          const projX = width / 2 + worldX * scale;
+          const projY = height * 0.55 + (worldY - cameraY) * scale;
+
+          if (projX < -50 || projX > width + 50 || projY < -50 || projY > height + 50) {
+            continue;
+          }
+
+          // Depth-based Alpha & Radius
+          const depthFactor = Math.max(0.05, Math.min(1, 1 - (worldZ - 40) / 700));
+          const pointRadius = Math.max(0.6, (1.8 + Math.sin(step + nx * 5) * 0.4) * scale * 1.3);
+
+          // Deep Sapphire, Azure, and Sky Blue Color Palette
+          const colorInterpolation = Math.sin(nx * 2 + step) * 0.5 + 0.5;
+          let rVal = 59 + colorInterpolation * 37;
+          let gVal = 130 + colorInterpolation * 35;
+          let bVal = 246 + colorInterpolation * 9;
+
+          // Height highlight: crests glow brighter azure/sky
+          const heightHighlight = Math.max(0, (worldY + 40) / 80);
+          rVal = Math.min(255, rVal + heightHighlight * 60);
+          gVal = Math.min(255, gVal + heightHighlight * 70);
+          bVal = Math.min(255, bVal + heightHighlight * 10);
+
+          const alpha = depthFactor * (0.35 + heightHighlight * 0.45);
 
           ctx.beginPath();
-          ctx.arc(x, y, baseRadius, 0, Math.PI * 2);
-
-          // Interactive Color Modulation:
-          // Near mouse: glows with vibrant sapphire & ice blue highlights
-          if (isNearMouse && c % 3 === 0) {
-            ctx.fillStyle = `rgba(147, 197, 253, ${alpha})`; // ice highlight
-          } else if (c % 7 === 0 && depthPercent > 0.4) {
-            ctx.fillStyle = `rgba(59, 130, 246, ${alpha * 0.95})`; // royal sapphire
-          } else if (c % 11 === 0 && depthPercent > 0.5) {
-            ctx.fillStyle = `rgba(96, 165, 250, ${alpha * 0.9})`; // sky azure
-          } else if (c % 13 === 0 && depthPercent > 0.6) {
-            ctx.fillStyle = `rgba(37, 99, 235, ${alpha * 0.85})`; // deep cobalt
-          } else {
-            ctx.fillStyle = `rgba(240, 244, 250, ${alpha})`;
-          }
+          ctx.arc(projX, projY, pointRadius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${Math.round(rVal)}, ${Math.round(gVal)}, ${Math.round(bVal)}, ${alpha.toFixed(3)})`;
           ctx.fill();
+
+          // Subtle connect horizontal adjacent particles in foreground for cyber grid mesh
+          if (c > 0 && r % 4 === 0 && depthFactor > 0.4) {
+            ctx.strokeStyle = `rgba(${Math.round(rVal)}, ${Math.round(gVal)}, ${Math.round(bVal)}, ${(alpha * 0.25).toFixed(3)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
         }
       }
 
-      // 3. Draw & update interactive cosmic dust motes
-      for (let i = 0; i < dustMotes.length; i++) {
-        const mote = dustMotes[i];
+      // Render Floating Dust Motes
+      for (const mote of dustMotes) {
         mote.x += mote.vx;
         mote.y += mote.vy;
-        mote.phase += 0.02;
-
-        // Mouse magnetic attraction / deflection
-        const dMouse = Math.hypot(mote.x - mouseX, mote.y - mouseY);
-        if (dMouse < 160) {
-          const angle = Math.atan2(mote.y - mouseY, mote.x - mouseX);
-          mote.x += Math.cos(angle) * 1.5;
-          mote.y += Math.sin(angle) * 1.5;
-        }
+        mote.phase += 0.03;
 
         // Screen wrap
         if (mote.x < 0) mote.x = width;
@@ -215,7 +209,7 @@ export function ParticleWave() {
         const pulseAlpha = mote.baseAlpha * (0.6 + Math.sin(mote.phase) * 0.4);
         ctx.beginPath();
         ctx.arc(mote.x, mote.y, mote.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${pulseAlpha})`;
+        ctx.fillStyle = `rgba(147, 197, 253, ${pulseAlpha.toFixed(3)})`;
         ctx.fill();
       }
 
@@ -233,11 +227,11 @@ export function ParticleWave() {
   }, []);
 
   return (
-    <div className="absolute inset-0 pointer-events-auto overflow-hidden">
-      <canvas ref={canvasRef} className="w-full h-full opacity-90 cursor-default" />
-      {/* Seamless edge fade overlays */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#000000] via-transparent to-[#000000]/70 pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#000000] via-transparent to-[#000000] pointer-events-none" />
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
+      <canvas ref={canvasRef} className="w-full h-full opacity-75" />
+      {/* Seamless radial and vertical edge fade overlays */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_20%,transparent_30%,#060913_90%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#060913]/20 to-[#060913]/80 pointer-events-none" />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import React, { Suspense } from "react";
 import Link from "next/link";
-import { Flame, Zap } from "lucide-react";
+import { Flame } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { BottomNav } from "./bottom-nav";
 import { CatiLogo } from "./cati-logo";
@@ -46,11 +46,8 @@ function AppShellInner({
           <CatiLogo size="sm" />
         </Link>
         <div className="flex items-center gap-2 text-xs font-medium">
-          <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/10 px-2 py-0.5 text-amber-400 border border-amber-500/20">
-            <Flame className="h-3 w-3 fill-amber-400/20" /> {streak}d
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-lg bg-blue-500/10 px-2 py-0.5 text-blue-400 border border-blue-500/20">
-            <Zap className="h-3 w-3 fill-blue-400/20" /> {xp} XP
+          <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/10 px-2.5 py-1 text-amber-400 border border-amber-500/20 font-mono">
+            <Flame className="h-3.5 w-3.5 fill-amber-400/20" /> {streak}d Streak
           </span>
         </div>
       </header>
