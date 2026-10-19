@@ -123,7 +123,7 @@ const ARCHETYPES: CognitiveArchetype[] = [
       "The student possesses exact metacognitive awareness: they have mastered top-down memoization and precisely pinpointed the state-transition barrier preventing bottom-up tabulation.",
     graphNode: {
       name: "Top-Down Memoization",
-      status: "Developing (0.5 – 0.7)",
+      status: "Developing (0.5 to 0.7)",
       mastery: 65,
       color: "text-amber-400 bg-amber-500/10",
       border: "border-amber-500/30",

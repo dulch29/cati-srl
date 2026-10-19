@@ -159,8 +159,8 @@ export function QuestDetailClient({ questId }: { questId: string }) {
         });
         setQuest((prev) => (prev ? { ...prev, status: "completed" } : null));
         addToast({
-          title: "Quest Mastered! 🎉",
-          description: `+${json.xpAwarded} XP awarded! Streak advanced to ${json.currentStreak} days.`,
+          title: "Quest Completed",
+          description: `+${json.xpAwarded} XP awarded. Streak advanced to ${json.currentStreak} days.`,
           type: "xp",
         });
       } else {
