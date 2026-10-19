@@ -17,12 +17,16 @@ import { CatiLogo } from "@/components/layout/cati-logo";
 import { Button } from "@/components/ui/button";
 import { InteractiveLandingShowcase } from "@/components/landing/interactive-hero";
 import { ParticleWave } from "@/components/landing/particle-wave";
+import { InteractiveAmbientBackground } from "@/components/ui/interactive-ambient-background";
 
 export default function HomePage() {
   return (
     <div className="relative min-h-screen flex flex-col justify-between overflow-hidden bg-[#000000] text-slate-100 selection:bg-[#34D399]/20 selection:text-[#34D399]">
       {/* 3D Generative Particle Wave Canvas (Syntara Aesthetic) */}
       <ParticleWave />
+
+      {/* Global Interactive Ambient Spotlight & Micro-Dot Reveal */}
+      <InteractiveAmbientBackground />
 
       {/* Subtle Central Emerald & Indigo Illumination */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_15%,rgba(52,211,153,0.07),rgba(99,102,241,0.05),transparent_70%)]" />
@@ -54,17 +58,17 @@ export default function HomePage() {
           </a>
         </nav>
 
-        {/* Action Button: High-Contrast Solid White */}
+        {/* Action Button: Advanced Interactive Button */}
         <div className="flex items-center gap-3">
           <Link href="/login">
-            <button className="hidden sm:inline-flex text-xs font-medium text-slate-300 hover:text-white px-4 py-2 transition-colors">
+            <Button variant="ghost" size="sm" className="hidden sm:inline-flex text-xs">
               Sign In
-            </button>
+            </Button>
           </Link>
           <Link href="/dashboard">
-            <button className="inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-xs font-semibold text-black transition-all hover:bg-slate-200 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.15)]">
+            <Button variant="white" size="sm" className="text-xs">
               Launch Console
-            </button>
+            </Button>
           </Link>
         </div>
       </header>
@@ -95,14 +99,14 @@ export default function HomePage() {
         {/* High-Contrast Action Buttons (Syntara Reference Style) */}
         <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
           <Link href="/journal/new?sample=recursion">
-            <button className="inline-flex items-center justify-center rounded-md bg-white px-7 py-3 text-sm font-semibold text-black transition-all hover:bg-slate-200 active:scale-95 shadow-[0_0_25px_rgba(255,255,255,0.2)]">
+            <Button variant="white" size="lg" className="rounded-xl px-7 py-3 text-sm">
               Explore the Platform
-            </button>
+            </Button>
           </Link>
           <Link href="/dashboard">
-            <button className="inline-flex items-center justify-center rounded-md border border-white/20 bg-transparent px-7 py-3 text-sm font-semibold text-white transition-all hover:bg-white/5 hover:border-white/40 active:scale-95">
+            <Button variant="outline" size="lg" className="rounded-xl px-7 py-3 text-sm">
               Book a Demo &bull; Console
-            </button>
+            </Button>
           </Link>
         </div>
 
@@ -182,9 +186,9 @@ export default function HomePage() {
 
           <div className="mt-8">
             <Link href="/journal/new?sample=recursion">
-              <button className="inline-flex items-center justify-center rounded-full bg-white px-7 py-3 text-xs font-semibold text-black transition-all hover:bg-slate-200 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+              <Button variant="white" size="default" className="rounded-full px-7 py-3 text-xs">
                 Get Started
-              </button>
+              </Button>
             </Link>
           </div>
 

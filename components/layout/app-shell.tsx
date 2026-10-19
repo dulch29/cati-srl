@@ -7,6 +7,7 @@ import { Sidebar } from "./sidebar";
 import { BottomNav } from "./bottom-nav";
 import { CatiLogo } from "./cati-logo";
 import { ToastProvider } from "@/components/ui/toast";
+import { InteractiveAmbientBackground } from "@/components/ui/interactive-ambient-background";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -23,8 +24,11 @@ export function AppShell({
 }: AppShellProps) {
   return (
     <ToastProvider>
-      <div className="min-h-screen bg-[#0B0F17] text-slate-100 flex flex-col md:flex-row">
-      {/* Desktop Sidebar with Suspense boundary */}
+      <div className="min-h-screen bg-[#080C14] text-slate-100 flex flex-col md:flex-row relative">
+        {/* Interactive Ambient Background */}
+        <InteractiveAmbientBackground />
+
+        {/* Desktop Sidebar with Suspense boundary */}
       <Suspense
         fallback={
           <div className="hidden md:flex h-screen w-64 border-r border-slate-800/80 bg-slate-950/70 p-5 fixed left-0 top-0" />

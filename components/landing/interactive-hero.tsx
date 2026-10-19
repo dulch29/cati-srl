@@ -359,7 +359,7 @@ export function InteractiveLandingShowcase() {
               Ready to calibrate your own study reflections?
             </span>
             <Link href="/journal/new?sample=recursion">
-              <Button size="sm" className="bg-white text-black hover:bg-slate-200 font-semibold px-4 shadow-lg shadow-white/10">
+              <Button variant="white" size="sm" className="px-4">
                 Launch Interactive Demo
               </Button>
             </Link>
