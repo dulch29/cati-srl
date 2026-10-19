@@ -32,6 +32,8 @@ import {
   getLocalAiAnalysis,
 } from "@/lib/supabase/local-store";
 
+export const instant = false;
+
 interface PageProps {
   params: Promise<{ entryId: string }>;
 }
@@ -436,11 +438,16 @@ export default async function InsightsPage({ params }: PageProps) {
                   unresolved concepts.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="pt-2">
+              <CardContent className="pt-2 flex flex-wrap items-center gap-3">
                 <Link href="/review">
                   <Button size="default" className="shadow-emerald-500/20">
-                    Start Review
+                    Start Adaptive Review
                     <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href="/knowledge-map">
+                  <Button variant="outline" size="default">
+                    View Knowledge Map
                   </Button>
                 </Link>
               </CardContent>

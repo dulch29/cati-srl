@@ -23,15 +23,10 @@ export type {
   EvaluateReviewRequest,
 } from "../ai/schemas/review";
 
-export interface QuestTask {
-  id: string;
-  description: string;
-  completed: boolean;
-}
-
-export interface QuestData {
-  title: string;
-  reason: string;
-  estimated_time: string;
-  tasks: QuestTask[];
-}
+export type {
+  QuestTaskType,
+  QuestDifficulty,
+  QuestTask,
+  GeneratedQuest,
+  CompleteQuestRequest,
+} from "../ai/schemas/quest";

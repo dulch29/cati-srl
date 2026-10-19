@@ -61,6 +61,27 @@ export interface StoredReview {
   created_at: string;
 }
 
+export interface StoredQuestTask {
+  id: string;
+  text: string;
+  type: "read" | "practice" | "explain" | "review";
+  completed: boolean;
+}
+
+export interface StoredQuest {
+  id: string;
+  user_id: string;
+  title: string;
+  reason: string;
+  estimated_time: string;
+  difficulty: "easy" | "medium" | "hard";
+  tasks: StoredQuestTask[];
+  reward_xp: number;
+  status: "pending" | "in_progress" | "completed";
+  created_at: string;
+  completed_at?: string | null;
+}
+
 export interface StoredUserProfile {
   id: string;
   display_name: string | null;
@@ -78,6 +99,7 @@ interface LocalStoreData {
   learner_concepts: Record<string, StoredLearnerConcept>;
   concept_relations: Record<string, StoredConceptRelation>;
   reviews: Record<string, StoredReview>;
+  quests: Record<string, StoredQuest>;
 }
 
 const CACHE_FILE = path.join(process.cwd(), ".next", "cati-demo-store.json");
@@ -95,6 +117,7 @@ function readStore(): LocalStoreData {
         learner_concepts: parsed.learner_concepts || {},
         concept_relations: parsed.concept_relations || {},
         reviews: parsed.reviews || {},
+        quests: parsed.quests || {},
       };
     }
   } catch {
@@ -108,6 +131,7 @@ function readStore(): LocalStoreData {
     learner_concepts: {},
     concept_relations: {},
     reviews: {},
+    quests: {},
   };
 }
 
@@ -328,3 +352,44 @@ export function updateLocalReview(
   writeStore(store);
   return updated;
 }
+
+// ================= Quests =================
+export function saveLocalQuest(quest: StoredQuest): void {
+  const store = readStore();
+  store.quests[quest.id] = quest;
+  writeStore(store);
+}
+
+export function getLocalQuestById(questId: string): StoredQuest | null {
+  const store = readStore();
+  return store.quests[questId] || null;
+}
+
+export function getActiveLocalQuest(userId: string): StoredQuest | null {
+  const store = readStore();
+  const userQuests = Object.values(store.quests)
+    .filter((q) => q.user_id === userId && (q.status === "pending" || q.status === "in_progress"))
+    .sort((a, b) => (b.created_at > a.created_at ? 1 : -1));
+  return userQuests[0] || null;
+}
+
+export function getLocalQuests(userId: string): StoredQuest[] {
+  const store = readStore();
+  return Object.values(store.quests)
+    .filter((q) => q.user_id === userId)
+    .sort((a, b) => (b.created_at > a.created_at ? 1 : -1));
+}
+
+export function updateLocalQuest(
+  questId: string,
+  updates: Partial<StoredQuest>
+): StoredQuest | null {
+  const store = readStore();
+  const current = store.quests[questId];
+  if (!current) return null;
+  const updated = { ...current, ...updates };
+  store.quests[questId] = updated;
+  writeStore(store);
+  return updated;
+}
+

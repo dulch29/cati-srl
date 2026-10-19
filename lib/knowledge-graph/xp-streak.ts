@@ -138,3 +138,89 @@ export async function awardXpAndCalibrateStreak(
     isNewDayActive,
   };
 }
+
+/**
+ * Directly awards a specific XP amount and calibrates streak on activity (e.g., Quest completion).
+ */
+export async function awardDirectXpAndCalibrateStreak(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  xpAmount: number
+): Promise<XpStreakResult> {
+  const now = new Date();
+  const today = now.toISOString().split("T")[0];
+
+  const yestDate = new Date();
+  yestDate.setDate(yestDate.getDate() - 1);
+  const yesterday = yestDate.toISOString().split("T")[0];
+
+  let currentXp = 275;
+  let currentStreak = 1;
+  let lastActiveDate: string | null = null;
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { data: profile } = await supabase
+        .from("users_profile")
+        .select("xp, streak, last_active_date")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (profile) {
+        currentXp = Number(profile.xp) || 0;
+        currentStreak = Number(profile.streak) || 0;
+        lastActiveDate = profile.last_active_date;
+      }
+    } catch {
+      // fallback
+    }
+  } else {
+    const localProfile = getLocalUserProfile(userId);
+    currentXp = localProfile.xp;
+    currentStreak = localProfile.streak;
+    lastActiveDate = localProfile.last_active_date;
+  }
+
+  let newStreak = currentStreak;
+  let isNewDayActive = false;
+
+  if (lastActiveDate === today) {
+    newStreak = currentStreak === 0 ? 1 : currentStreak;
+  } else if (lastActiveDate === yesterday) {
+    newStreak = currentStreak + 1;
+    isNewDayActive = true;
+  } else {
+    newStreak = 1;
+    isNewDayActive = true;
+  }
+
+  const newTotalXp = currentXp + xpAmount;
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase
+        .from("users_profile")
+        .update({
+          xp: newTotalXp,
+          streak: newStreak,
+          last_active_date: today,
+        })
+        .eq("id", userId);
+    } catch (err) {
+      console.warn("[XP Streak] Failed updating Supabase profile:", err);
+    }
+  }
+
+  updateLocalUserProfile(userId, {
+    xp: newTotalXp,
+    streak: newStreak,
+    last_active_date: today,
+  });
+
+  return {
+    xpAwarded: xpAmount,
+    newTotalXp,
+    currentStreak: newStreak,
+    isNewDayActive,
+  };
+}

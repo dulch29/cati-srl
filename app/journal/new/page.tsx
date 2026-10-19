@@ -82,6 +82,18 @@ export default function NewJournalPage() {
     setConfidence(4); // Tests overconfidence calibration against confusion evidence
   };
 
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("sample") === "recursion") {
+        const timer = setTimeout(() => {
+          handlePreFillSample();
+        }, 0);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -169,10 +181,10 @@ export default function NewJournalPage() {
             size="sm"
             onClick={handlePreFillSample}
             disabled={isSubmitting}
-            className="self-start text-xs border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/10 shrink-0"
+            className="self-start text-xs border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/20 shrink-0 font-medium shadow-sm shadow-indigo-500/20"
           >
             <Lightbulb className="mr-1.5 h-3.5 w-3.5 text-indigo-400" />
-            Auto-fill Test Sample
+            Auto-fill Demo Case (Python Recursion)
           </Button>
         </div>
 

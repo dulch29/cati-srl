@@ -14,6 +14,9 @@ import {
   ChevronRight,
   Lightbulb,
   Calendar,
+  Clock,
+  HelpCircle,
+  Award,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import {
@@ -24,6 +27,25 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { OnboardingModal } from "@/components/onboarding/onboarding-modal";
+
+interface QuestTask {
+  id: string;
+  text: string;
+  type: "read" | "practice" | "explain" | "review";
+  completed: boolean;
+}
+
+interface ActiveQuest {
+  id: string;
+  title: string;
+  reason: string;
+  estimated_time: string;
+  difficulty: "easy" | "medium" | "hard";
+  tasks: QuestTask[];
+  reward_xp: number;
+  status: "pending" | "in_progress" | "completed";
+}
 
 interface DashboardData {
   stats: {
@@ -42,12 +64,14 @@ interface DashboardData {
     self_confidence: number;
     created_at: string;
   }>;
+  activeQuest?: ActiveQuest | null;
   userEmail: string;
 }
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     async function loadDashboard() {
@@ -80,9 +104,23 @@ export default function DashboardPage() {
   const userEmail = data?.userEmail || "alex.chen@student.edu";
   const recentJournals = data?.recentJournals || [];
   const latestNextAction = data?.latestNextAction;
+  const activeQuest = data?.activeQuest;
+
+  const questTasks = activeQuest?.tasks || [];
+  const completedQuestTasks = questTasks.filter((t) => t.completed).length;
+  const questProgressPercent =
+    questTasks.length > 0
+      ? Math.round((completedQuestTasks / questTasks.length) * 100)
+      : 0;
 
   return (
     <AppShell userEmail={userEmail} streak={stats.streak} xp={stats.xp}>
+      {/* Onboarding Tour Modal */}
+      <OnboardingModal
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+      />
+
       <div className="space-y-8">
         {/* Top Welcome Banner */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800/80 pb-6">
@@ -98,16 +136,25 @@ export default function DashboardPage() {
               Reflect on study sessions, strengthen weak concepts with adaptive review, and monitor your personal knowledge map.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Button
+              variant="outline"
+              size="default"
+              onClick={() => setShowOnboarding(true)}
+              className="border-slate-700 hover:border-slate-600 text-slate-300"
+            >
+              <HelpCircle className="mr-1.5 h-4 w-4 text-indigo-400" />
+              Guided Tour
+            </Button>
             <Link href="/review">
               <Button
                 variant={stats.reviewsDueCount > 0 ? "primary" : "outline"}
                 className={stats.reviewsDueCount > 0 ? "bg-rose-600 hover:bg-rose-500 text-white" : ""}
               >
-                <RotateCcw className="mr-2 h-4 w-4" />
+                <RotateCcw className="mr-1.5 h-4 w-4" />
                 Start Review
                 {stats.reviewsDueCount > 0 && (
-                  <span className="ml-2 rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold">
+                  <span className="ml-1.5 rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold">
                     {stats.reviewsDueCount}
                   </span>
                 )}
@@ -115,7 +162,7 @@ export default function DashboardPage() {
             </Link>
             <Link href="/journal/new">
               <Button size="default" className="shadow-indigo-500/20">
-                <BookOpen className="mr-2 h-4 w-4" />
+                <BookOpen className="mr-1.5 h-4 w-4" />
                 New Journal Entry
               </Button>
             </Link>
@@ -162,7 +209,7 @@ export default function DashboardPage() {
               <span className="text-xs text-indigo-400">XP Points</span>
             </div>
             <p className="mt-1 text-[11px] text-slate-500">
-              +15 XP per correct answer, +10 XP session completion
+              +15 XP per correct answer, +75 XP per completed quest
             </p>
           </Card>
 
@@ -258,19 +305,19 @@ export default function DashboardPage() {
                   Step 3
                 </div>
                 <div className="text-sm font-semibold text-white">
-                  Adaptive Review
+                  Adaptive Review & Quests
                 </div>
                 <div className="text-xs text-slate-400 mt-1">
-                  Practice targeted questions to calibrate your knowledge graph.
+                  Practice targeted questions and 10-minute micro-quests.
                 </div>
               </div>
             </div>
 
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-              <Link href="/journal/new">
+              <Link href="/journal/new?sample=recursion">
                 <Button size="lg" className="shadow-lg shadow-indigo-500/20">
                   <BookOpen className="mr-2 h-5 w-5" />
-                  New Journal Entry
+                  Auto-fill Demo Reflection (Python Recursion)
                 </Button>
               </Link>
             </div>
@@ -278,43 +325,101 @@ export default function DashboardPage() {
         ) : (
           /* Active Learning Dashboard */
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left 2 Columns: Recommended Next Action & Recent Topics */}
+            {/* Left 2 Columns: Active Quest Card & Recent Topics */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Latest Recommended Next Action */}
-              <Card className="border-indigo-500/30 bg-gradient-to-br from-slate-900/90 via-slate-900/70 to-indigo-950/20 relative overflow-hidden">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-300">
-                      <Lightbulb className="h-3.5 w-3.5 text-indigo-400" />
-                      AI Recommended Next Action
-                    </span>
-                    <span className="text-xs text-slate-400">
-                      From Latest Journal Analysis
-                    </span>
+              {/* Active Quest Card */}
+              {activeQuest ? (
+                <Card className="border-indigo-500/30 bg-gradient-to-br from-slate-900/95 via-slate-900/80 to-indigo-950/30 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-6 pointer-events-none opacity-10">
+                    <Compass className="h-32 w-32 text-indigo-400" />
                   </div>
-                  <CardTitle className="text-lg text-white mt-2">
-                    {latestNextAction ? "Personalized Study Step" : "Keep Learning Loop Active"}
-                  </CardTitle>
-                  <CardDescription className="text-slate-300 text-sm leading-relaxed">
-                    {latestNextAction ||
-                      "Complete today's adaptive review on weak concepts to prevent forgetting and reinforce your knowledge graph."}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Link href="/review">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-300">
+                        <Compass className="h-3.5 w-3.5 text-indigo-400" />
+                        Active Metacognitive Quest
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center gap-1 text-xs text-slate-400">
+                          <Clock className="h-3.5 w-3.5" />
+                          {activeQuest.estimated_time}
+                        </span>
+                        <span className="rounded-md border border-indigo-500/30 bg-indigo-500/20 px-2 py-0.5 text-[11px] font-bold text-indigo-300">
+                          +{activeQuest.reward_xp} XP Reward
+                        </span>
+                      </div>
+                    </div>
+                    <CardTitle className="text-xl text-white mt-2 font-bold">
+                      {activeQuest.title}
+                    </CardTitle>
+                    <CardDescription className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                      {activeQuest.reason}
+                    </CardDescription>
+                  </CardHeader>
+
+                  <CardContent className="space-y-4">
+                    {/* Progress Bar based on completed tasks */}
+                    <div className="space-y-1.5 rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-400 font-medium">
+                          Quest Progress
+                        </span>
+                        <span className="font-semibold text-slate-200">
+                          {completedQuestTasks} of {questTasks.length} tasks completed ({questProgressPercent}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full transition-all duration-300"
+                          style={{ width: `${questProgressPercent}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/80">
+                      <div className="text-xs text-slate-400">
+                        Difficulty: <strong className="text-slate-200 capitalize">{activeQuest.difficulty}</strong>
+                      </div>
+                      <Link href={`/quests/${activeQuest.id}`}>
+                        <Button size="sm">
+                          Continue Quest <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="border-slate-800 bg-slate-900/60 p-6 text-center">
+                  <Compass className="h-8 w-8 text-indigo-400/60 mx-auto mb-2" />
+                  <h4 className="text-sm font-semibold text-white">No Active Quest</h4>
+                  <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                    Complete a journal entry or review to unlock your next quest.
+                  </p>
+                  <div className="mt-4">
+                    <Link href="/journal/new">
                       <Button size="sm">
-                        Start Adaptive Review{" "}
-                        <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                      </Button>
-                    </Link>
-                    <Link href="/knowledge-map">
-                      <Button variant="outline" size="sm">
-                        View Knowledge Map
+                        <BookOpen className="mr-1.5 h-3.5 w-3.5" /> New Journal Entry
                       </Button>
                     </Link>
                   </div>
-                </CardContent>
+                </Card>
+              )}
+
+              {/* Latest Recommended Next Action */}
+              <Card className="border-indigo-500/20 bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-indigo-950/20 p-5">
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-0.5 text-xs font-medium text-indigo-300">
+                    <Lightbulb className="h-3.5 w-3.5 text-indigo-400" />
+                    AI Study Recommendation
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    From Latest Analysis
+                  </span>
+                </div>
+                <p className="mt-2.5 text-slate-300 text-xs sm:text-sm leading-relaxed">
+                  {latestNextAction ||
+                    "Complete today's adaptive review on weak concepts to prevent forgetting and reinforce your knowledge graph."}
+                </p>
               </Card>
 
               {/* Recent Journal Topics */}
@@ -380,6 +485,28 @@ export default function DashboardPage() {
                   Self-Regulated Learning Actions
                 </h3>
                 <div className="space-y-3">
+                  {activeQuest && (
+                    <Link
+                      href={`/quests/${activeQuest.id}`}
+                      className="flex items-center justify-between rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-3 hover:border-indigo-500/50 hover:bg-indigo-500/10 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                          <Compass className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-semibold text-slate-200">
+                            Active Quest
+                          </div>
+                          <div className="text-[10px] text-indigo-300">
+                            {completedQuestTasks} of {questTasks.length} tasks done
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-indigo-400" />
+                    </Link>
+                  )}
+
                   <Link
                     href="/review"
                     className="flex items-center justify-between rounded-xl border border-slate-800 p-3 hover:border-slate-700 hover:bg-slate-800/50 transition-colors"
@@ -395,7 +522,7 @@ export default function DashboardPage() {
                         <div className="text-[10px] text-slate-400">
                           {stats.reviewsDueCount > 0
                             ? `${stats.reviewsDueCount} concepts due`
-                            : "3 questions on weak areas"}
+                            : "3 targeted questions"}
                         </div>
                       </div>
                     </div>
@@ -444,11 +571,11 @@ export default function DashboardPage() {
                 </div>
               </Card>
 
-              {/* Learning Tip Card */}
+              {/* Metacognitive Tip */}
               <Card className="border-slate-800/80 bg-slate-950/40 p-4">
                 <div className="flex items-start gap-3">
                   <div className="rounded-lg bg-indigo-500/10 p-2 text-indigo-400 shrink-0">
-                    <Compass className="h-4 w-4" />
+                    <Award className="h-4 w-4" />
                   </div>
                   <div className="text-xs space-y-1">
                     <span className="font-semibold text-white">

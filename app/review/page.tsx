@@ -16,6 +16,7 @@ import {
   Zap,
   Flame,
   Loader2,
+  Compass,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import {
@@ -575,7 +576,8 @@ export default function ReviewPage() {
               </Link>
               <Link href="/dashboard" className="w-full sm:w-auto">
                 <Button variant="outline" size="default" className="w-full">
-                  Return to Dashboard
+                  <Compass className="mr-2 h-4 w-4 text-indigo-400" />
+                  Continue to Quest &amp; Dashboard
                 </Button>
               </Link>
             </div>

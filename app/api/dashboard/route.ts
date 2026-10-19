@@ -8,7 +8,10 @@ import {
   getLocalJournalEntries,
   getAllLocalAiAnalyses,
   getLocalReviews,
+  getActiveLocalQuest,
+  StoredQuest,
 } from "@/lib/supabase/local-store";
+import { getOrGenerateQuest } from "@/lib/quests/generate-quest";
 
 export async function GET() {
   try {
@@ -209,6 +212,63 @@ export async function GET() {
       }
     }
 
+    // 6. Fetch Active Quest
+    let activeQuest: StoredQuest | null = null;
+    if (isSupabaseConfigured()) {
+      try {
+        const { data: dbQuests } = await dbClient
+          .from("quests")
+          .select("id, user_id, title, reason, estimated_time, tasks, status, created_at")
+          .eq("user_id", activeUserId)
+          .in("status", ["pending", "in_progress"])
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (dbQuests && dbQuests.length > 0) {
+          const q = dbQuests[0];
+          const rawTasks = Array.isArray(q.tasks)
+            ? (q.tasks as Array<Record<string, unknown>>)
+            : [];
+          const tasks = rawTasks.map((t, idx) => ({
+            id: (t.id as string) || `task-${idx + 1}`,
+            text: (t.text as string) || (t.description as string) || "Task",
+            type: ((t.type as string) || "practice") as "read" | "practice" | "explain" | "review",
+            completed: !!t.completed,
+          }));
+
+          activeQuest = {
+            id: q.id,
+            user_id: q.user_id,
+            title: q.title,
+            reason: q.reason || "",
+            estimated_time: q.estimated_time || "10 mins",
+            difficulty: "medium",
+            tasks,
+            reward_xp: 75,
+            status: q.status as "pending" | "in_progress",
+            created_at: q.created_at,
+          };
+        }
+      } catch {
+        // fallback
+      }
+    }
+
+    if (!activeQuest) {
+      activeQuest = getActiveLocalQuest(activeUserId);
+    }
+
+    // Auto-generate quest if user has journal/concept activity but no active quest
+    if (!activeQuest && (journals.length > 0 || concepts.length > 0)) {
+      try {
+        activeQuest = await getOrGenerateQuest(dbClient, {
+          userId: activeUserId,
+        });
+      } catch (qErr) {
+        console.warn("[GET /api/dashboard] Quest generation error:", qErr);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       stats: {
@@ -221,6 +281,7 @@ export async function GET() {
       },
       latestNextAction,
       recentJournals: journals,
+      activeQuest,
       userEmail,
     });
   } catch (error: unknown) {
