@@ -627,22 +627,22 @@ export default function DashboardPage() {
                     {activeQuest.estimated_time} &bull; {activeQuest.difficulty}
                   </span>
                   <Link href={`/quests/${activeQuest.id}`}>
-                    <Button variant="ghost" size="sm" className="text-xs h-7 px-2.5">
-                      Continue <ArrowRight className="h-3.5 w-3.5" />
+                    <Button variant="secondary" size="sm" className="text-xs h-7 px-3">
+                      Continue Quest <ArrowRight className="h-3.5 w-3.5 ml-1" />
                     </Button>
                   </Link>
                 </div>
               </div>
             ) : (
               <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-xl text-center">
-                <Compass className="h-8 w-8 text-indigo-400/60 mx-auto mb-2" />
+                <Compass className="h-8 w-8 text-blue-400/70 mx-auto mb-2" />
                 <h4 className="text-xs font-semibold text-white">No Active Quest</h4>
                 <p className="text-[11px] text-slate-400 mt-1">
-                  Complete today&apos;s reflection to unlock your next quest.
+                  Complete a journal entry or review to unlock your next quest.
                 </p>
                 <Link href="/journal/new" className="inline-block mt-3">
                   <Button variant="secondary" size="sm">
-                    Write Reflection
+                    New Journal Entry
                   </Button>
                 </Link>
               </div>

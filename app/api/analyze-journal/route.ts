@@ -8,6 +8,7 @@ import {
 import { buildJournalAnalysisPrompt } from "@/lib/ai/prompts/analyze-journal";
 import { callGeminiForAnalysis } from "@/lib/ai/clients/gemini";
 import { updateLearnerKnowledgeGraph } from "@/lib/ai/knowledge-graph";
+import { getOrGenerateQuest } from "@/lib/quests/generate-quest";
 import {
   isSupabaseConfigured,
   saveLocalJournalEntry,
@@ -254,7 +255,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 8. Return created journal entry ID on success
+    // 8. Generate targeted micro-quest based on diagnosed concept / misconception
+    try {
+      await getOrGenerateQuest(dbClient, {
+        userId: activeUserId,
+        journalEntryId,
+        forceNew: true,
+      });
+    } catch (questError) {
+      console.warn(
+        "[POST /api/analyze-journal] Error generating quest after reflection:",
+        questError
+      );
+    }
+
+    // 9. Return created journal entry ID on success
     return NextResponse.json(
       {
         success: true,

@@ -76,8 +76,8 @@ export function OnboardingModal({
       step: 1,
       badge: "Step 1: Daily Reflection",
       icon: BookOpen,
-      iconColor: "text-indigo-400",
-      iconBg: "bg-indigo-500/10 border-indigo-500/20",
+      iconColor: "text-blue-400",
+      iconBg: "bg-blue-500/10 border-blue-500/20",
       title: "Write a short learning journal after you study.",
       description:
         "Spend 2 minutes reflecting on what you learned today, what felt intuitive, and what caused confusion. Rate your self-confidence to help Cati calibrate your metacognition.",
@@ -114,7 +114,7 @@ export function OnboardingModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg rounded-2xl border border-indigo-500/30 bg-gradient-to-b from-slate-900 to-slate-950 p-6 sm:p-8 shadow-2xl shadow-indigo-500/10">
+      <div className="relative w-full max-w-lg rounded-2xl border border-blue-500/30 bg-gradient-to-b from-slate-900 to-slate-950 p-6 sm:p-8 shadow-2xl shadow-blue-500/10">
         {/* Close Button */}
         <button
           onClick={handleClose}
@@ -126,8 +126,8 @@ export function OnboardingModal({
 
         {/* Step Counter Pill */}
         <div className="flex items-center gap-2 mb-4">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-300">
-            <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-300">
+            <Sparkles className="h-3.5 w-3.5 text-blue-400" />
             <span>Welcome to Cati SRL</span>
           </div>
           <span className="text-xs text-slate-500 font-mono">
@@ -168,7 +168,7 @@ export function OnboardingModal({
               onClick={() => setStep(s.step)}
               className={`h-2 rounded-full transition-all duration-300 ${
                 s.step === step
-                  ? "w-8 bg-indigo-500"
+                  ? "w-8 bg-blue-600"
                   : "w-2 bg-slate-700 hover:bg-slate-600"
               }`}
               aria-label={`Go to step ${s.step}`}

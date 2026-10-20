@@ -9,6 +9,7 @@ import {
 } from "@/lib/ai/schemas/review";
 import { updateLearnerMastery } from "@/lib/knowledge-graph/update-mastery";
 import { awardXpAndCalibrateStreak } from "@/lib/knowledge-graph/xp-streak";
+import { getOrGenerateQuest } from "@/lib/quests/generate-quest";
 import {
   isSupabaseConfigured,
   getLocalReviewById,
@@ -231,7 +232,17 @@ export async function POST(request: NextRequest) {
       result: evaluation.result,
     });
 
-    // 10. Return evaluation response
+    // 10. Generate or update targeted micro-quest if needed
+    try {
+      await getOrGenerateQuest(dbClient, {
+        userId: activeUserId,
+        forceNew: false,
+      });
+    } catch (questErr) {
+      console.warn("[POST /api/evaluate-review] Quest generation error:", questErr);
+    }
+
+    // 11. Return evaluation response
     // Do not reveal the full expected answer unless result is incorrect or partially correct
     const shouldShowExplanation = evaluation.result !== "correct";
 

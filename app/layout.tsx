@@ -18,6 +18,7 @@ export const metadata: Metadata = {
     "Turn daily study reflections into personalized, adaptive learning actions, calibrated metacognitive insights, and personal knowledge graphs.",
 };
 
+import { Suspense } from "react";
 import { PageTransitionLoader } from "@/components/ui/page-transition-loader";
 
 export default function RootLayout({
@@ -31,7 +32,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
     >
       <body className="min-h-full bg-[#060913] text-slate-100 flex flex-col font-sans selection:bg-blue-500/30 selection:text-blue-200">
-        <PageTransitionLoader />
+        <Suspense fallback={null}>
+          <PageTransitionLoader />
+        </Suspense>
         {children}
       </body>
     </html>
